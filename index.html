@@ -3,703 +3,2004 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proposta Robótica Educacional - SME Goiânia</title>
-    <script src="https://cdn-tailwindcss.vercel.app/"></script>
-    <!-- jsPDF Core -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <!-- jsPDF AutoTable Plugin -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <title>Informe Executivo | Sistema FIEG</title>
+    
+    <!-- Google Fonts: Montserrat EXCLUSIVA para todo o documento -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Cropper.js CSS para a ferramenta de recorte -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['Montserrat', 'sans-serif'],
+                        serif: ['Montserrat', 'sans-serif'] 
+                    },
+                    colors: {
+                        brand: {
+                            blue: '#003A70', 
+                            red: '#E31937',  
+                            light: '#F4F6F9', 
+                            dark: '#2B2D42',
+                            gray: '#5B667A',
+                            danger: '#B91C1C',
+                            'danger-light': '#FEF2F2',
+                            success: '#166534',
+                            'success-light': '#F0FDF4',
+                            warning: '#92400E',
+                            'warning-light': '#FFFBEB',
+                            'info-light': '#EFF6FF'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Bibliotecas Necessárias -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    
+    <!-- LocalForage (IndexedDB Wrapper para armazenamento ilimitado) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        *, *::before, *::after { box-sizing: border-box; }
+        body { background-color: #F4F6F9; font-family: 'Montserrat', sans-serif; box-sizing: border-box; }
+        .hide-on-pdf { display: block; }
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        .tap-target {
+            min-height: 44px;
+            min-width: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            touch-action: manipulation;
+        }
+        .touch-input {
+            min-height: 44px;
+            touch-action: manipulation;
+        }
+        .touch-checkbox {
+            width: 24px;
+            height: 24px;
+            flex: 0 0 24px;
+        }
+        .responsive-actions,
+        .responsive-split,
+        .report-toolbar,
+        .report-actions,
+        .modal-footer-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+        .responsive-split,
+        .report-toolbar {
+            justify-content: space-between;
+            align-items: center;
+        }
+        .report-actions {
+            justify-content: flex-end;
+        }
+        .date-range {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .mobile-only-break { display: none; }
         
-        .card-base { @apply bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8; }
-        .input-inline-table { @apply w-16 text-center bg-slate-50 border border-slate-200 rounded px-1.5 py-1 text-xs font-semibold text-slate-700 focus:bg-white focus:border-cyan-500 focus:outline-none transition-all; }
-        .input-param { @apply w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm font-semibold text-slate-700 focus:bg-white focus:border-cyan-500 focus:outline-none transition-all; }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
         
-        /* Régua de margem */
-        .regua-valor-lucro { @apply w-full h-8 flex rounded-full overflow-hidden border border-slate-200 bg-slate-100 mt-2; }
-        .regua-custo { @apply bg-slate-500 h-full flex items-center justify-center text-white text-xs font-bold transition-all duration-500; }
-        .regua-lucro { @apply bg-cyan-600 h-full flex items-center justify-center text-white text-xs font-bold transition-all duration-500; }
+        #pdf-loading { backdrop-filter: blur(5px); }
+
+        .editorial-text {
+            text-align: justify;
+            text-align-last: left;
+            text-justify: inter-word;
+            hyphens: auto;
+            overflow-wrap: break-word;
+        }
+
+        .editorial-textarea {
+            text-align: justify;
+            text-justify: inter-word;
+        }
+
+        /* Estilo do modal de Crop */
+        .cropper-view-box, .cropper-face { border-radius: 0; }
+
+        @media (hover: none), (pointer: coarse) {
+            .touch-reveal {
+                opacity: 1 !important;
+            }
+        }
+
+        @media (max-width: 640px) {
+            body { padding-bottom: 1.5rem; }
+            #executive-dashboard {
+                padding-left: 0.75rem;
+                padding-right: 0.75rem;
+                padding-top: 1rem;
+            }
+            .mobile-stack {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+            .mobile-stack > * {
+                width: 100%;
+            }
+            .mobile-full {
+                width: 100%;
+                justify-content: center;
+            }
+            .mobile-title {
+                font-size: 1.75rem !important;
+                line-height: 1.15 !important;
+                overflow-wrap: anywhere;
+            }
+            .date-range,
+            .responsive-split,
+            .report-toolbar,
+            .modal-footer-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .report-actions {
+                display: grid;
+                grid-template-columns: 1fr;
+                width: 100%;
+            }
+            .modal-shell {
+                width: 100%;
+                max-height: calc(100dvh - 1rem);
+                border-radius: 0.75rem;
+            }
+            .modal-header,
+            .modal-footer {
+                padding: 1rem;
+            }
+            .modal-body {
+                padding: 1rem;
+            }
+            .modal-heading {
+                font-size: 1.125rem !important;
+                line-height: 1.25 !important;
+            }
+            .upload-drop {
+                padding: 1.25rem;
+            }
+            .mobile-only-break { display: block; }
+            .mobile-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem !important;
+            }
+        }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="text-brand-dark antialiased min-h-screen pb-12 font-sans">
 
-    <div class="max-w-7xl mx-auto space-y-8 mb-16">
+    <!-- Pré-carregamento Seguro da Logo FIEG -->
+    <img src="https://i.postimg.cc/HWKTMyKs/sistema-fieg-02.png" crossorigin="anonymous" class="hidden" id="preload-fieg-logo" alt="preload">
 
-        <!-- CABEÇALHO -->
-        <header class="card-base relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-cyan-600 via-indigo-600 to-blue-600"></div>
-            <div class="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
-                <div class="flex items-center gap-6">
-                    <img id="logo-pdf" src="https://i.postimg.cc/8CXccsTc/sseducacao.png" alt="Logomarca Seduc-GO" class="h-16 w-auto object-contain">
-                    <div class="border-l-2 border-slate-200 pl-6 hidden md:block text-left">
-                        <h1 class="text-2xl font-black text-slate-800 tracking-tight">Proposta de Parceria Robótica Educacional</h1>
-                        <h2 class="text-sm font-semibold text-cyan-700 uppercase tracking-wide">Secretaria Municipal de Educação de Goiânia</h2>
-                    </div>
+    <!-- Overlay de Loading -->
+    <div id="pdf-loading" class="fixed inset-0 bg-white bg-opacity-90 z-[999] hidden flex-col items-center justify-center" role="status" aria-live="polite" aria-atomic="true" aria-hidden="true">
+        <i class="ph ph-spinner animate-spin text-6xl text-brand-blue mb-4" aria-hidden="true"></i>
+        <h2 class="text-2xl font-bold text-brand-dark">Gerando relatório oficial...</h2>
+        <p class="text-brand-gray mt-2 font-semibold italic" id="pdf-loading-text">Preparando pautas, imagens e paginação.</p>
+    </div>
+
+    <!-- Container Principal -->
+    <div id="executive-dashboard" class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        
+        <!-- Cabeçalho Principal (Web) -->
+        <header class="flex flex-col md:flex-row justify-between items-start border border-blue-100 mb-8 bg-white/90 p-4 sm:p-6 rounded-xl shadow-sm hide-on-pdf">
+            <div class="flex-1">
+                <div class="flex items-start sm:items-center gap-3 mb-2">
+                    <i class="ph-fill ph-buildings text-3xl text-brand-blue" aria-hidden="true"></i>
+                    <h1 class="mobile-title text-3xl md:text-4xl font-black text-brand-blue tracking-tight">INFORME EXECUTIVO</h1>
                 </div>
-                <div class="bg-slate-50 px-6 py-3 rounded-xl border border-slate-100 shadow-sm text-center md:text-right w-full md:w-auto">
-                    <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Implantação Piloto</span>
-                    <p class="text-sm font-extrabold text-slate-700">47 Escolas de Tempo Integral (12 Meses)</p>
+                <p class="text-brand-gray font-bold text-lg">
+                    Sistema FIEG | <span id="current-date-display" class="text-brand-dark"></span> 
+                </p>
+                <p id="active-filters-display" class="text-brand-red font-bold text-sm mt-1"></p>
+                <p id="autosave-status" class="text-brand-success font-bold text-xs mt-2" aria-live="polite">Salvamento automático ativo</p>
+            </div>
+            
+            <div class="flex flex-col items-end gap-4 mt-4 md:mt-0 w-full md:w-auto">
+                <div class="header-logos">
+                    <img src="https://i.postimg.cc/HWKTMyKs/sistema-fieg-02.png" crossorigin="anonymous" alt="Sistema FIEG" style="height: 36px; width: auto; object-fit: contain; display: block;">
+                </div>
+                
+                <div class="responsive-actions mobile-stack w-full md:w-auto mt-2">
+                    <button onclick="openModal()" class="tap-target mobile-full bg-white border border-brand-blue text-brand-blue font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
+                        <i class="ph ph-magic-wand text-xl" aria-hidden="true"></i>
+                        Importar Relatório
+                    </button>
+                    <button onclick="exportToPDF()" class="tap-target mobile-full bg-brand-blue text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-900 transition-colors" id="btn-export">
+                        <i class="ph ph-file-pdf text-xl" aria-hidden="true"></i>
+                        Gerar PDF Oficial
+                    </button>
                 </div>
             </div>
         </header>
 
-        <!-- BLOCO 1: DIMENSIONAMENTO DO PÚBLICO-ALVO -->
-        <section class="card-base">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-slate-100 pb-4">
-                <div class="flex items-center gap-3">
-                    <div class="bg-cyan-600 w-1.5 h-6 rounded-full"></div>
-                    <h3 class="text-xl font-bold text-slate-800">Bloco 1: Público-Alvo e Matriz de Demanda</h3>
+        <!-- Filtros em Tempo Real -->
+        <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm mb-10 flex flex-col gap-4 border border-gray-100 hide-on-pdf" id="filters-container">
+            <h3 class="text-brand-blue font-bold border-b border-gray-100 pb-2 mb-2"><i class="ph-bold ph-funnel" aria-hidden="true"></i> Filtros de Pauta</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+                <div>
+                    <label for="filter-unit-text" class="block text-xs font-bold text-brand-gray uppercase mb-1">Buscar Unidade</label>
+                    <input type="text" id="filter-unit-text" onkeyup="applyFilters()" placeholder="Ex: Canaã, Jaiara..." class="touch-input w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-brand-blue font-medium bg-gray-50 hover:bg-white transition">
                 </div>
-                <span class="text-xs text-slate-400 bg-slate-50 px-2.5 py-1 rounded-md border italic">*Os valores de Turmas e Alunos na tabela abaixo são editáveis.</span>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <!-- Tabela de Turmas e Alunos -->
-                <div class="lg:col-span-8 overflow-x-auto rounded-xl border border-slate-100">
-                    <table class="min-w-full text-sm text-left">
-                        <thead class="bg-slate-50 text-slate-600 text-[10px] uppercase font-bold border-b border-slate-100">
-                            <tr>
-                                <th class="py-3 px-4">Segmento</th>
-                                <th class="py-3 px-4">Ano Letivo</th>
-                                <th class="py-3 px-4 text-center">Turmas</th>
-                                <th class="py-3 px-4 text-center">Alunos/Turma</th>
-                                <th class="py-3 px-4 text-right">Alunos Est.</th>
-                                <th class="py-3 px-4 text-right">Kits Nec.</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabela-estudantes" class="divide-y divide-slate-100 font-medium text-slate-700">
-                            <!-- Preenchido via JS -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Painel Lateral de Totais -->
-                <div class="lg:col-span-4 space-y-4">
-                    <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-4 shadow-inner">
-                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Resumo Geral do Público</h4>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="bg-white border p-3.5 rounded-xl text-center shadow-sm">
-                                <span class="text-[10px] text-slate-400 block uppercase">Escolas</span>
-                                <span class="text-2xl font-black text-cyan-700">47</span>
-                            </div>
-                            <div class="bg-white border p-3.5 rounded-xl text-center shadow-sm">
-                                <span class="text-[10px] text-slate-400 block uppercase">Total Turmas</span>
-                                <span id="total-turmas" class="text-2xl font-black text-cyan-700">234</span>
-                            </div>
-                            <div class="bg-white border p-4 rounded-xl text-center shadow-sm col-span-2">
-                                <span class="text-[10px] text-slate-400 block uppercase mb-0.5">Estudantes Atendidos</span>
-                                <span id="total-alunos" class="text-3xl font-black text-cyan-800">6.375</span>
-                            </div>
-                            <div class="bg-cyan-600 text-white p-4 rounded-xl text-center shadow-sm col-span-2">
-                                <span class="text-[10px] opacity-80 block uppercase mb-0.5">Total de Kits Necessários</span>
-                                <span id="total-kits" class="text-3xl font-black">1.170</span>
-                                <span class="text-[8px] opacity-75 block mt-1 uppercase">(Grupo de no máx. 6 alunos por turma)</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- BLOCO 2: MATERIAL TECNOLÓGICO E DIDÁTICO (CAPEX) -->
-        <section class="card-base">
-            <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
-                <div class="bg-cyan-600 w-1.5 h-6 rounded-full"></div>
-                <h3 class="text-xl font-bold text-slate-800">Bloco 2: Tecnologia e Materiais de Apoio</h3>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- Kits de Robótica Avançados -->
-                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200/60 space-y-4">
-                    <div class="flex items-center justify-between border-b pb-2">
-                        <h4 class="font-bold text-slate-800 text-sm">1. Kits de Robótica Avançados</h4>
-                        <span class="text-xs font-bold text-cyan-700 bg-cyan-50 px-2 py-0.5 rounded border border-cyan-100 uppercase">Editável</span>
-                    </div>
-                    
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Custo de Aquisição (Unit.)</label>
-                            <div class="flex items-center">
-                                <span class="text-slate-400 mr-1 font-bold">R$</span>
-                                <input type="number" id="input-kit-aquisicao" value="4500.00" class="input-param">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Custo de Locação (Unit.)</label>
-                            <div class="flex items-center">
-                                <span class="text-slate-400 mr-1 font-bold">R$</span>
-                                <input type="number" id="input-kit-locacao" value="1350.00" class="input-param">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="space-y-2 pt-2">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase block">Modalidade de Contratação dos Kits</label>
-                        <div class="grid grid-cols-2 gap-3">
-                            <label class="flex items-center justify-between bg-white border border-slate-200 p-3 rounded-xl cursor-pointer hover:bg-slate-50 transition-all">
-                                <div class="flex items-center gap-2">
-                                    <input type="radio" name="modalidade-kits" value="aquisicao" class="text-cyan-600 focus:ring-cyan-500 h-4 w-4" checked>
-                                    <span class="text-xs font-semibold text-slate-700">Aquisição Direta</span>
-                                </div>
-                            </label>
-                            <label class="flex items-center justify-between bg-white border border-slate-200 p-3 rounded-xl cursor-pointer hover:bg-slate-50 transition-all">
-                                <div class="flex items-center gap-2">
-                                    <input type="radio" name="modalidade-kits" value="locacao" class="text-cyan-600 focus:ring-cyan-500 h-4 w-4">
-                                    <span class="text-xs font-semibold text-slate-700">Locação Tecnológica</span>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-4 rounded-xl border border-slate-200 flex justify-between items-center shadow-sm">
-                        <span class="text-xs font-bold text-slate-500 uppercase">Subtotal Kits (<span class="display-qtd-kits">0</span> unid)</span>
-                        <span id="subtotal-kits-vlr" class="text-lg font-black text-slate-800">R$ 0,00</span>
-                    </div>
-                </div>
-
-                <!-- Livros Didáticos -->
-                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200/60 space-y-4 flex flex-col justify-between">
-                    <div class="space-y-4">
-                        <div class="flex items-center justify-between border-b pb-2">
-                            <h4 class="font-bold text-slate-800 text-sm">2. Materiais Didáticos (Livros do Estudante)</h4>
-                            <span class="text-xs font-bold text-cyan-700 bg-cyan-50 px-2 py-0.5 rounded border border-cyan-100 uppercase">Editável</span>
-                        </div>
-
-                        <div>
-                            <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Custo do Livro por Estudante</label>
-                            <div class="flex items-center">
-                                <span class="text-slate-400 mr-1 font-bold">R$</span>
-                                <input type="number" id="input-livro-unitario" value="180.00" class="input-param">
-                            </div>
-                        </div>
-                        <p class="text-[10px] text-slate-400 italic leading-relaxed">
-                            *Cada estudante selecionado receberá o livro didático completo adequado à sua série letiva do Ensino Fundamental.
-                        </p>
-                    </div>
-
-                    <div class="bg-white p-4 rounded-xl border border-slate-200 flex justify-between items-center shadow-sm mt-4">
-                        <span class="text-xs font-bold text-slate-500 uppercase">Subtotal Material Didático</span>
-                        <span id="subtotal-livros-vlr" class="text-lg font-black text-slate-800">R$ 0,00</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- BLOCO 3: PROFESSORES E ATENDIMENTO SEMANAL -->
-        <section class="card-base">
-            <div class="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
-                <div class="flex items-center gap-3">
-                    <div class="bg-cyan-600 w-1.5 h-6 rounded-full"></div>
-                    <h3 class="text-xl font-bold text-slate-800">Bloco 3: Dimensionamento de Professores</h3>
-                </div>
-                <span class="text-xs font-bold text-cyan-700 bg-cyan-50 px-2.5 py-1 rounded border border-cyan-100 uppercase">Editável</span>
-            </div>
-
-            <!-- Parâmetros de Trabalho do Professor -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 text-center">
-                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                    <label class="text-[10px] font-bold text-slate-500 block uppercase mb-2">Carga Horária Contratual</label>
-                    <select id="select-jornada-docente" class="w-full bg-white border rounded-lg p-2 font-bold text-slate-700 text-sm focus:outline-none focus:ring-1 focus:ring-cyan-500">
-                        <option value="40" selected>Jornada Completa (40h/sem)</option>
-                        <option value="30">Jornada Média (30h/sem)</option>
-                        <option value="20">Jornada Parcial (20h/sem)</option>
+                <div>
+                    <label for="filter-type" class="block text-xs font-bold text-brand-gray uppercase mb-1">Eixo de Atuação</label>
+                    <select id="filter-type" onchange="applyFilters()" class="touch-input w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-brand-blue font-medium bg-gray-50 hover:bg-white transition cursor-pointer">
+                        <option value="all">Todos os Eixos</option>
+                        <option value="Educação e Qualificação">Educação e Qualificação</option>
+                        <option value="Saúde e Segurança">Saúde e Segurança</option>
+                        <option value="Indústria 4.0 e Inovação">Indústria 4.0 e Inovação</option>
+                        <option value="Relações Institucionais">Relações Institucionais</option>
                     </select>
                 </div>
-                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                    <label class="text-[10px] font-bold text-slate-500 block uppercase mb-2">Hora-Atividade / Planejamento</label>
-                    <select id="select-hora-atividade" class="w-full bg-white border rounded-lg p-2 font-bold text-slate-700 text-sm focus:outline-none focus:ring-1 focus:ring-cyan-500">
-                        <option value="33.33" selected>1/3 da Jornada (33%)</option>
-                        <option value="0">Sem Hora-Atividade (0%)</option>
-                    </select>
-                </div>
-                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                    <label class="text-[10px] font-bold text-slate-500 block uppercase mb-1">Salário-Base Mensal</label>
-                    <div class="flex items-center justify-center">
-                        <span class="text-xs text-slate-400 mr-1">R$</span>
-                        <input type="number" id="input-salario-docente" value="5500.00" class="input-param text-center font-bold">
+                <div>
+                    <span class="block text-xs font-bold text-brand-gray uppercase mb-1">Intervalo de Meses</span>
+                    <div class="date-range">
+                        <input type="month" id="filter-start-month" onchange="applyFilters()" title="Mês Inicial" class="touch-input w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-brand-blue font-medium bg-gray-50 hover:bg-white transition cursor-pointer">
+                        <input type="month" id="filter-end-month" onchange="applyFilters()" title="Mês Final" class="touch-input w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-brand-blue font-medium bg-gray-50 hover:bg-white transition cursor-pointer">
                     </div>
                 </div>
-                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                    <label class="text-[10px] font-bold text-slate-500 block uppercase mb-1">Encargos Trabalhistas (%)</label>
-                    <div class="flex items-center justify-center">
-                        <input type="number" id="input-encargos-docente" value="80" class="input-param text-center font-bold">
-                        <span class="text-xs text-slate-400 ml-1">%</span>
+                <div>
+                    <span class="block text-xs font-bold text-brand-gray uppercase mb-1">Datas Específicas</span>
+                    <div class="date-range">
+                        <input type="date" id="filter-start-date" onchange="applyFilters()" title="Data Inicial" class="touch-input w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-brand-blue font-medium bg-gray-50 hover:bg-white transition cursor-pointer">
+                        <input type="date" id="filter-end-date" onchange="applyFilters()" title="Data Final" class="touch-input w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-brand-blue font-medium bg-gray-50 hover:bg-white transition cursor-pointer">
                     </div>
                 </div>
             </div>
-
-            <!-- Memória de Dimensionamento Pedagógico -->
-            <div class="bg-slate-50 border rounded-2xl p-6 grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
-                <div class="space-y-1">
-                    <span class="text-[10px] font-bold text-slate-400 block uppercase">Atendimento por Turma</span>
-                    <span class="text-xl font-bold text-slate-800">120 minutos (2h/sem)</span>
-                </div>
-                <div class="space-y-1 border-t md:border-t-0 md:border-l border-slate-200 pt-4 md:pt-0">
-                    <span class="text-[10px] font-bold text-slate-400 block uppercase">Regência Efetiva / Professor</span>
-                    <span id="txt-regencia-por-prof" class="text-xl font-bold text-slate-800">26.7 horas / semana</span>
-                </div>
-                <div class="space-y-1 border-t md:border-t-0 md:border-l border-slate-200 pt-4 md:pt-0">
-                    <span class="text-[10px] font-bold text-cyan-600 block uppercase">Professores Necessários</span>
-                    <span id="txt-headcount-professores" class="text-2xl font-black text-cyan-700">0 Profs</span>
-                    <span class="text-[9px] text-slate-400 block font-medium">para cobrir <span id="txt-total-horas-demanda">0</span> horas/semana</span>
-                </div>
-                <div class="bg-white rounded-xl border border-slate-200 p-4 flex flex-col justify-center">
-                    <span class="text-[10px] font-bold text-slate-400 block uppercase">Total Professores (12 Meses)</span>
-                    <span id="subtotal-professores-vlr" class="text-xl font-black text-slate-800">R$ 0,00</span>
-                </div>
-            </div>
-        </section>
-
-        <!-- BLOCO 4: FORMAÇÃO E ASSESSORIA -->
-        <section class="card-base">
-            <div class="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
-                <div class="flex items-center gap-3">
-                    <div class="bg-cyan-600 w-1.5 h-6 rounded-full"></div>
-                    <h3 class="text-xl font-bold text-slate-800">Bloco 4: Capacitação & Assessoria Pedagógica</h3>
-                </div>
-                <span class="text-xs font-bold text-cyan-700 bg-cyan-50 px-2.5 py-1 rounded border border-cyan-100 uppercase">Editável</span>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- Formação Inicial de Professores -->
-                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200/60 space-y-4">
-                    <div class="flex items-center justify-between border-b pb-2">
-                        <h4 class="font-bold text-slate-800 text-sm">3. Formação Inicial Docente</h4>
-                        <span class="text-xs text-slate-400">Pacote único por professor</span>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Custo por Professor</label>
-                            <div class="flex items-center">
-                                <span class="text-slate-400 mr-1 font-bold">R$</span>
-                                <input type="number" id="input-formacao-prof" value="1800.00" class="input-param">
-                            </div>
-                        </div>
-                        <div class="text-center flex flex-col justify-center bg-white rounded-xl border p-2">
-                            <span class="text-[9px] font-bold text-slate-400 block uppercase">Total Dimensionado</span>
-                            <span id="txt-formacao-profs" class="text-sm font-bold text-slate-700">0 Profs</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-4 rounded-xl border border-slate-200 flex justify-between items-center shadow-sm">
-                        <span class="text-xs font-bold text-slate-500 uppercase font-bold">Subtotal Formação Inicial</span>
-                        <span id="subtotal-formacao-vlr" class="text-lg font-black text-slate-800">R$ 0,00</span>
-                    </div>
-                </div>
-
-                <!-- Assessoria Pedagógica, Monitoramento e Avaliação -->
-                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200/60 space-y-4">
-                    <div class="flex items-center justify-between border-b pb-2">
-                        <h4 class="font-bold text-slate-800 text-sm">4. Assessoria e Monitoramento Mensal</h4>
-                        <span class="text-xs text-slate-400">Assessoria contínua p/ escola</span>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Valor por Escola / Mês</label>
-                            <div class="flex items-center">
-                                <span class="text-slate-400 mr-1 font-bold">R$</span>
-                                <input type="number" id="input-assessoria-escola" value="800.00" class="input-param">
-                            </div>
-                        </div>
-                        <div class="text-center flex flex-col justify-center bg-white rounded-xl border p-2">
-                            <span class="text-[9px] font-bold text-slate-400 block uppercase">Escolas Contempladas</span>
-                            <span class="text-sm font-bold text-slate-700">47 Escolas</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-4 rounded-xl border border-slate-200 flex justify-between items-center shadow-sm">
-                        <span class="text-xs font-bold text-slate-500 uppercase font-bold">Subtotal Assessoria (12 Meses)</span>
-                        <span id="subtotal-assessoria-vlr" class="text-lg font-black text-slate-800">R$ 0,00</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- BLOCO 5: CONSOLIDAÇÃO DA PROPOSTA -->
-        <section class="card-base bg-slate-900 text-white border-none shadow-2xl relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-64 h-64 bg-cyan-500 opacity-5 rounded-full blur-3xl -mr-32 -mt-32"></div>
             
-            <h3 class="text-xl font-bold mb-8 flex items-center gap-3 relative z-10">
-                <div class="bg-cyan-400 w-1.5 h-6 rounded-full"></div>
-                Bloco 5: Consolidação Financeira Geral
-            </h3>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-8 relative z-10">
-                <!-- Simulador de Parcelamento -->
-                <div class="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10 shadow-lg">
-                    <div class="flex justify-between items-center mb-4">
-                        <label class="text-xs font-bold text-slate-400 uppercase tracking-widest text-left">Condição de Pagamento</label>
-                        <span id="label-acrescimo" class="hidden text-[10px] font-black bg-red-500 text-white px-2 py-0.5 rounded-full animate-pulse uppercase tracking-tighter">+3% Acréscimo Financeiro</span>
-                    </div>
-                    
-                    <div class="flex flex-col md:flex-row items-center gap-4">
-                        <select id="select-parcelas" class="w-full p-4 bg-slate-800 border border-slate-600 rounded-xl font-black text-white text-xl outline-none focus:ring-2 focus:ring-cyan-500 transition-all cursor-pointer">
-                            <!-- Preenchido via JS de 1x a 12x -->
-                        </select>
-                        <div class="text-right flex-shrink-0 w-full md:w-auto mt-4 md:mt-0">
-                            <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">Valor do Pagamento</span>
-                            <span id="valor-cada-parcela" class="text-3xl font-black text-cyan-400">R$ 0,00</span>
-                        </div>
-                    </div>
-                    <p class="text-[10px] text-slate-400 mt-4 italic text-left">*Regra: Até 8 parcelas mensais sem juros ou acréscimo. A partir de 9 parcelas, aplica-se acréscimo de 3% sobre o valor global.</p>
-                </div>
-
-                <!-- Resumo Geral em Linha -->
-                <div class="flex flex-col justify-center gap-3 px-2">
-                    <div class="flex justify-between items-center text-sm border-b border-white/5 pb-1">
-                        <span class="text-slate-400">1. Material Tecnológico (Kits):</span>
-                        <span id="consol-kits-vlr" class="font-bold text-white">R$ 0,00</span>
-                    </div>
-                    <div class="flex justify-between items-center text-sm border-b border-white/5 pb-2">
-                        <span class="text-slate-400">2. Material Didático (Contraturno):</span>
-                        <span id="consol-material-vlr" class="font-bold text-white">R$ 0,00</span>
-                    </div>
-                    <div class="flex justify-between items-center text-sm border-b border-white/5 pb-2">
-                        <span class="text-slate-400">3. Alimentação (Alunos):</span>
-                        <span id="consol-lanche-vlr" class="font-bold text-white">R$ 0,00</span>
-                    </div>
-                    <div class="flex justify-between items-center text-sm border-b border-white/5 pb-2">
-                        <span class="text-slate-400">4. Custos com Docência (Professores):</span>
-                        <span id="consol-profs-vlr" class="font-bold text-white">R$ 0,00</span>
-                    </div>
-                    <div class="flex justify-between items-center text-sm border-b border-white/5 pb-2">
-                        <span class="text-slate-400">5. Equipe Técnica e Apoio:</span>
-                        <span id="consol-equipe-vlr" class="font-bold text-white">R$ 0,00</span>
-                    </div>
-                    <div class="flex justify-between items-center text-sm border-b border-white/5 pb-2 text-cyan-400 font-bold">
-                        <span class="text-slate-400">Ajuste / Encargo Financeiro:</span>
-                        <span id="valor-ajuste-financeiro" class="font-bold">R$ 0,00</span>
-                    </div>
-                </div>
+            <div class="responsive-split w-full mt-2 border-t border-gray-100 pt-4">
+                <button onclick="clearAllData()" class="tap-target mobile-full text-brand-danger hover:text-red-800 transition-colors font-bold text-sm flex items-center gap-1" title="Zerar Banco de Dados">
+                    <i class="ph-bold ph-trash" aria-hidden="true"></i> Apagar Todos os Dados
+                </button>
+                <button onclick="clearFilters()" class="tap-target mobile-full bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors font-bold text-sm flex items-center gap-1" title="Limpar Filtros e Ver Tudo">
+                    <i class="ph-bold ph-arrows-counter-clockwise" aria-hidden="true"></i> Redefinir Filtros
+                </button>
             </div>
+        </div>
 
-            <!-- Total Geral Proposta -->
-            <div class="bg-gradient-to-r from-cyan-600 to-indigo-600 p-8 md:p-10 rounded-3xl text-center shadow-inner relative z-10 flex flex-col items-center justify-center">
-                <span class="block text-sm font-bold opacity-90 uppercase tracking-[0.3em] mb-2 text-white w-full">Investimento Global da Proposta (12 Meses)</span>
-                <span id="total-geral-proposta" class="block text-4xl md:text-6xl font-black tracking-tight drop-shadow-xl w-full text-center">R$ 0,00</span>
-            </div>
-        </section>
-
-        <!-- Botão PDF -->
-        <div class="text-center pb-20 flex justify-center">
-            <button id="btn-gerar-pdf-completo" class="bg-slate-800 hover:bg-slate-900 text-white py-4 px-12 rounded-2xl shadow-xl font-bold flex items-center transition-all transform hover:-translate-y-1 active:scale-95">
-                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                Gerar Relatório de Proposta Comercial (PDF)
-            </button>
+        <h2 class="text-2xl font-black text-brand-dark mb-8 border-b-2 border-brand-red pb-2 uppercase tracking-wide hide-on-pdf text-center mx-auto" style="font-family: 'Montserrat', sans-serif;">Panorama das Unidades</h2>
+        
+        <div id="news-feed" class="flex flex-col w-full">
+            <!-- Pautas injetadas pelo JS -->
         </div>
 
     </div>
 
-<script>
-    // --- STREAMING_CHUNK: Definindo Objetos de Dados do Público Alvo... ---
-    // Estrutura de dados das escolas e turmas (47 Escolas total, conforme edital da imagem_c442fc.png e sua errata)
-    const dadosSME = [
-        { id: 1, segmento: "Anos Iniciais", ano: "1º ano", turmas: 47, alunosPorTurma: 25 },
-        { id: 2, segmento: "Anos Iniciais", ano: "2º ano", turmas: 47, alunosPorTurma: 25 },
-        { id: 3, segmento: "Anos Iniciais", ano: "3º ano", turmas: 47, alunosPorTurma: 25 },
-        { id: 4, segmento: "Anos Iniciais", ano: "4º ano", turmas: 45, alunosPorTurma: 30 },
-        { id: 5, segmento: "Anos Iniciais", ano: "5º ano", turmas: 42, alunosPorTurma: 30 },
-        { id: 6, segmento: "Anos Finais", ano: "6º ano", turmas: 2, alunosPorTurma: 40 },
-        { id: 7, segmento: "Anos Finais", ano: "7º ano", turmas: 2, alunosPorTurma: 40 },
-        { id: 8, segmento: "Anos Finais", ano: "8º ano", turmas: 1, alunosPorTurma: 40 },
-        { id: 9, segmento: "Anos Finais", ano: "9º ano", turmas: 1, alunosPorTurma: 40 }
-    ];
+    <!-- Modal de Importação -->
+    <div id="import-modal" class="fixed inset-0 bg-brand-dark bg-opacity-80 z-50 hidden flex items-center justify-center p-2 sm:p-4 hide-on-pdf backdrop-blur-sm">
+        <div class="modal-shell bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[85vh] flex flex-col overflow-hidden">
+            <div class="modal-header p-5 border-b border-gray-200 flex justify-between items-start sm:items-center gap-3 bg-gray-50">
+                <h3 class="modal-heading text-2xl font-bold text-brand-blue flex items-center gap-2">
+                    <i class="ph-fill ph-magic-wand" aria-hidden="true"></i> Redator Especialista e Importador
+                </h3>
+                <button onclick="closeModal()" class="tap-target text-gray-600 hover:text-brand-danger transition-colors bg-white p-2 rounded-full shadow-sm" aria-label="Fechar importador">
+                    <i class="ph-bold ph-x text-xl" aria-hidden="true"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body p-6 overflow-y-auto flex-grow bg-gray-100" id="modal-body">
+                <div id="stage-upload" class="h-full flex flex-col items-center justify-center">
+                    <input type="file" id="word-upload" accept=".docx" multiple class="sr-only peer" onchange="processWordFiles(event)" aria-describedby="upload-help upload-limits">
+                    <label for="word-upload" class="upload-drop p-10 border-2 border-dashed border-brand-blue rounded-2xl bg-white text-center w-full max-w-xl cursor-pointer hover:bg-brand-info-light transition-all shadow-sm peer-focus-visible:ring-4 peer-focus-visible:ring-brand-blue peer-focus-visible:ring-offset-2">
+                        <span class="block"><i class="ph-fill ph-file-doc text-7xl text-brand-blue mb-4" aria-hidden="true"></i></span>
+                        <span class="block text-xl font-bold text-brand-blue" id="upload-feedback">Selecionar arquivos Word (.docx)</span>
+                        <span class="block text-sm text-gray-600 mt-2" id="upload-help">A ferramenta fará a limpeza aplicando as Normas Editoriais Semânticas.</span>
+                        <span class="block text-xs text-brand-gray mt-4 text-left max-w-xs mx-auto" id="upload-limits">
+                            Títulos: máx. 200 caracteres<br>
+                            Sínteses (Lead): máx. 500 caracteres<br>
+                            Corpo: máx. 1500 caracteres<br>
+                            Imagens centralizadas em Widescreen 2:1
+                        </span>
+                    </label>
+                </div>
 
-    const fmtBRL = (v) => v.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+                <div id="stage-review" class="hidden">
+                    <div class="responsive-split mb-4 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                        <h4 class="text-lg font-bold text-brand-dark"><span id="review-count">0</span> Pautas prontas para revisão.</h4>
+                        <button onclick="saveAllParsedReports(event)" class="tap-target mobile-full bg-brand-blue text-white px-6 py-2 rounded-lg font-bold shadow-md hover:bg-blue-900 transition flex items-center gap-2">
+                            <i class="ph-fill ph-check-circle" aria-hidden="true"></i> Aprovar e Publicar
+                        </button>
+                    </div>
+                    <div id="parsed-cards-container" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <!-- Cards extraídos -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    function setupMatriz() {
-        const tbody = document.getElementById('tabela-estudantes');
-        if(!tbody) return;
-        tbody.innerHTML = '';
-        dadosSME.forEach(item => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td class="py-3 px-4 text-xs font-semibold text-slate-500">${item.segmento}</td>
-                <td class="py-3 px-4 font-bold text-slate-800">${item.ano}</td>
-                <td class="py-3 px-4 text-center">
-                    <input type="number" class="input-inline-table input-turmas" data-id="${item.id}" value="${item.turmas}">
-                </td>
-                <td class="py-3 px-4 text-center">
-                    <input type="number" class="input-inline-table input-alunos" data-id="${item.id}" value="${item.alunosPorTurma}">
-                </td>
-                <td class="py-3 px-4 text-right font-bold text-slate-700 col-total-alunos" data-id="${item.id}">0</td>
-                <td class="py-3 px-4 text-right font-black text-cyan-700 col-total-kits" data-id="${item.id}">0</td>
-            `;
-            tbody.appendChild(tr);
+    <!-- Modal do Cropper (Ferramenta de Enquadramento) -->
+    <div id="crop-modal" class="fixed inset-0 bg-brand-dark bg-opacity-95 z-[2000] hidden flex items-center justify-center p-2 sm:p-4">
+        <div class="modal-shell bg-white rounded-xl shadow-2xl w-full max-w-5xl flex flex-col overflow-hidden">
+            <div class="modal-header p-4 border-b border-gray-200 flex justify-between items-start sm:items-center gap-3 bg-gray-50">
+                <h3 class="modal-heading text-xl font-bold text-brand-blue flex items-center gap-2">
+                    <i class="ph-bold ph-crop" aria-hidden="true"></i> Ajustar Enquadramento Fotográfico
+                </h3>
+                <button onclick="closeCropModal()" class="tap-target text-gray-600 hover:text-brand-danger transition" aria-label="Fechar ajuste de imagem"><i class="ph-bold ph-x text-xl" aria-hidden="true"></i></button>
+            </div>
+            <div class="p-6 bg-gray-200 flex justify-center items-center h-[60vh] max-h-[600px] overflow-hidden">
+                <!-- Imagem Target do Cropper -->
+                <img id="crop-image-target" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt="Imagem selecionada para ajuste de enquadramento" style="display: block; max-width: 100%; max-height: 100%;">
+            </div>
+            <div class="modal-footer p-4 border-t border-gray-200 flex justify-between items-center bg-white mobile-stack">
+                <p class="text-sm font-semibold text-brand-gray hidden md:block">
+                    <i class="ph-fill ph-info" aria-hidden="true"></i> Arraste a imagem ou redimensione a área de corte. A proporção está travada para o PDF oficial (1000x500).
+                </p>
+                <div class="modal-footer-actions">
+                    <button onclick="closeCropModal()" class="tap-target mobile-full px-5 py-2 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition">Cancelar</button>
+                    <button onclick="applyCrop()" class="tap-target mobile-full px-5 py-2 bg-brand-blue text-white font-bold rounded-lg hover:bg-blue-800 transition shadow-md flex items-center gap-2">
+                        <i class="ph-bold ph-check" aria-hidden="true"></i> Aplicar Corte
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Edição Individual -->
+    <div id="edit-single-modal" class="fixed inset-0 bg-brand-dark bg-opacity-80 z-50 hidden flex items-center justify-center p-2 sm:p-4 hide-on-pdf backdrop-blur-sm">
+        <div class="modal-shell bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-auto max-h-[95vh] flex flex-col overflow-hidden">
+            <div class="modal-header p-5 border-b border-gray-200 flex justify-between items-start sm:items-center gap-3 bg-gray-50">
+                <h3 class="modal-heading text-xl font-bold text-brand-blue flex items-center gap-2">
+                    <i class="ph-fill ph-pencil-simple" aria-hidden="true"></i> Editar Matéria (Padrão Normatizado)
+                </h3>
+                <button onclick="closeEditModal()" class="tap-target text-gray-600 hover:text-brand-danger transition-colors bg-white p-2 rounded-full shadow-sm" aria-label="Fechar edição da matéria">
+                    <i class="ph-bold ph-x text-xl" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body p-6 overflow-y-auto flex-grow bg-white space-y-4 font-sans">
+                <input type="hidden" id="edit-single-id">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="edit-single-unit" class="block text-[10px] font-bold text-brand-gray uppercase mb-1">Unidade</label>
+                        <input type="text" id="edit-single-unit" class="touch-input w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-brand-blue font-bold uppercase text-sm">
+                    </div>
+                    <div>
+                        <label for="edit-single-date" class="block text-[10px] font-bold text-brand-gray uppercase mb-1">Data da Ação</label>
+                        <input type="date" id="edit-single-date" class="touch-input w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-brand-blue text-sm font-bold text-brand-dark">
+                    </div>
+                </div>
+                <div>
+                    <label for="edit-single-type" class="block text-[10px] font-bold text-brand-gray uppercase mb-1">Eixo Estratégico</label>
+                    <select id="edit-single-type" class="touch-input w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-brand-blue text-sm">
+                        <option value="Educação e Qualificação">Educação e Qualificação</option>
+                        <option value="Saúde e Segurança">Saúde e Segurança</option>
+                        <option value="Indústria 4.0 e Inovação">Indústria 4.0 e Inovação</option>
+                        <option value="Relações Institucionais">Relações Institucionais</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="edit-single-title" class="flex justify-between text-[10px] font-bold text-brand-gray uppercase mb-1"><span>Manchete Executiva (Título Curto)</span> <span id="count-title" class="text-brand-red" aria-live="polite"></span></label>
+                    <input type="text" id="edit-single-title" maxlength="200" oninput="enforceEditorialLimit(this, 'title', 'count-title')" class="touch-input w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-brand-blue font-bold text-lg text-brand-dark">
+                </div>
+                <div>
+                    <label for="edit-single-lead" class="flex justify-between text-[10px] font-bold text-brand-gray uppercase mb-1"><span>Síntese Estratégica (Lead)</span> <span id="count-lead" class="text-brand-red" aria-live="polite"></span></label>
+                    <textarea id="edit-single-lead" rows="2" maxlength="500" oninput="enforceEditorialLimit(this, 'lead', 'count-lead')" class="editorial-textarea touch-input w-full border border-red-200 rounded p-3 focus:outline-none focus:ring-2 focus:ring-brand-blue text-sm text-brand-dark font-semibold leading-relaxed bg-red-50"></textarea>
+                </div>
+                <div>
+                    <label for="edit-single-content" class="flex justify-between text-[10px] font-bold text-brand-gray uppercase mb-1"><span>Corpo Institucional (Detalhes)</span> <span id="count-content" class="text-brand-red" aria-live="polite"></span></label>
+                    <textarea id="edit-single-content" rows="6" maxlength="1500" oninput="enforceEditorialLimit(this, 'content', 'count-content')" class="editorial-textarea touch-input w-full border border-gray-300 rounded p-3 focus:outline-none text-gray-800 leading-relaxed resize-none"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer p-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3 mobile-stack">
+                <button onclick="closeEditModal()" class="tap-target mobile-full px-5 py-2 text-gray-600 font-bold hover:bg-gray-200 rounded-lg transition">Fechar</button>
+                <button onclick="saveEditedReport()" class="tap-target mobile-full px-5 py-2 bg-brand-blue text-white font-bold rounded-lg hover:bg-blue-900 shadow-md transition flex items-center gap-2">
+                    <i class="ph-fill ph-check-circle" aria-hidden="true"></i> Atualizar Matéria
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação -->
+    <div id="custom-confirm-modal" class="fixed inset-0 bg-brand-dark bg-opacity-80 z-[1000] hidden flex items-center justify-center p-2 sm:p-4 hide-on-pdf backdrop-blur-sm">
+        <div class="modal-shell bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden">
+            <div class="modal-header p-5 border-b border-gray-200 flex justify-between items-start sm:items-center gap-3 bg-brand-danger-light">
+                <h3 id="confirm-modal-title" class="modal-heading text-xl font-bold text-brand-danger flex items-center gap-2">
+                    <i class="ph-fill ph-warning-circle" aria-hidden="true"></i> Atenção
+                </h3>
+                <button onclick="closeConfirmModal()" class="tap-target text-gray-600 hover:text-brand-danger transition-colors bg-white p-2 rounded-full shadow-sm" aria-label="Fechar confirmação">
+                    <i class="ph-bold ph-x text-xl" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="p-6 bg-white">
+                <p id="confirm-modal-text" class="text-gray-700 font-medium text-center text-lg"></p>
+            </div>
+            <div class="modal-footer p-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3 mobile-stack">
+                <button onclick="closeConfirmModal()" class="tap-target mobile-full px-5 py-2 text-gray-600 font-bold hover:bg-gray-200 rounded-lg transition">Cancelar</button>
+                <button onclick="executeConfirmAction()" class="tap-target mobile-full px-5 py-2 bg-brand-danger text-white font-bold rounded-lg hover:bg-red-800 shadow-md transition flex items-center gap-2">
+                    <i class="ph-bold ph-trash" aria-hidden="true"></i> Sim, Apagar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- PREVENÇÃO DE ERROS DE DECLARAÇÃO E NOVA BASE DE DADOS (INDEXEDDB) ---
+        var reports = [];
+        var parsedReportsCache = []; 
+        var currentFilterSubtitle = '';
+        const EDITORIAL_LIMITS = Object.freeze({
+            title: 200,
+            lead: 500,
+            content: 1500
         });
-    }
+        const JOURNALISTIC_TITLE_MAX = 140;
+        const REPORTS_STORAGE_KEY = 'fiegReportsDb';
+        const DRAFT_STORAGE_KEY = 'fiegReportsDraft';
+        const AUTOSAVE_DELAY_MS = 650;
+        var autosaveTimers = { reports: null, draft: null };
+        var autosaveChains = { reports: Promise.resolve(), draft: Promise.resolve() };
+        var autosaveState = { isBootstrapping: true };
+        var singleEditAutosaveBound = false;
 
-    function initParcelas() {
-        const select = document.getElementById('select-parcelas');
-        if (!select) return;
-        for (let i = 1; i <= 12; i++) {
-            const opt = document.createElement('option');
-            opt.value = i;
-            opt.innerText = i === 1 ? 'À Vista (1x)' : `${i} Parcelas Mensais`;
-            if (i === 12) opt.selected = true;
-            select.appendChild(opt);
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            }[char]));
         }
-    }
 
-    // --- STREAMING_CHUNK: Codificando Motor de Cálculo Dinâmico... ---
-    function calcular() {
-        let totalTurmas = 0;
-        let totalAlunos = 0;
-        let totalKits = 0;
-
-        // Processa matriz de alunos e turmas
-        document.querySelectorAll('.input-turmas').forEach(input => {
-            const id = parseInt(input.dataset.id);
-            const valTurmas = parseInt(input.value) || 0;
-            const item = dadosSME.find(d => d.id === id);
-            item.turmas = valTurmas;
-        });
-
-        document.querySelectorAll('.input-alunos').forEach(input => {
-            const id = parseInt(input.dataset.id);
-            const valAlunos = parseInt(input.value) || 0;
-            const item = dadosSME.find(d => d.id === id);
-            item.alunosPorTurma = valAlunos;
-        });
-
-        dadosSME.forEach(item => {
-            const totalAlunosLinha = item.turmas * item.alunosPorTurma;
-            // Pelo menos 1 kit de robótica para cada grupo de no máximo 06 estudantes por turma
-            const kitsPorTurma = Math.ceil(item.alunosPorTurma / 6);
-            const totalKitsLinha = item.turmas * kitsPorTurma;
-
-            totalTurmas += item.turmas;
-            totalAlunos += totalAlunosLinha;
-            totalKits += totalKitsLinha;
-
-            // Atualiza células da tabela
-            const colAlunos = document.querySelector(`.col-total-alunos[data-id="${item.id}"]`);
-            const colKits = document.querySelector(`.col-total-kits[data-id="${item.id}"]`);
-            if(colAlunos) colAlunos.innerText = totalAlunosLinha.toLocaleString('pt-BR');
-            if(colKits) colKits.innerText = totalKitsLinha.toLocaleString('pt-BR');
-        });
-
-        // Atualiza indicadores do topo
-        setText('total-turmas', totalTurmas);
-        setText('total-alunos', totalAlunos.toLocaleString('pt-BR'));
-        setText('total-kits', totalKits.toLocaleString('pt-BR'));
-        document.querySelectorAll('.display-qtd-kits').forEach(el => el.innerText = totalKits.toLocaleString('pt-BR'));
-
-        // CÁLCULO BLOCO 2: MATERIAL TECNOLÓGICO E DIDÁTICO
-        const modalidadeKits = document.querySelector('input[name="modalidade-kits"]:checked').value;
-        const vlrKitAquisicao = parseFloat(document.getElementById('input-kit-aquisicao').value) || 0;
-        const vlrKitLocacao = parseFloat(document.getElementById('input-kit-locacao').value) || 0;
-        const vlrKitEfetivo = modalidadeKits === 'aquisicao' ? vlrKitAquisicao : vlrKitLocacao;
-
-        const subtotalKits = totalKits * vlrKitEfetivo;
-        setText('subtotal-kits-vlr', fmtBRL(subtotalKits));
-        setText('consol-kits-vlr', fmtBRL(subtotalKits));
-
-        const vlrLivroUnitario = parseFloat(document.getElementById('input-livro-unitario').value) || 0;
-        const subtotalLivros = totalAlunos * vlrLivroUnitario;
-        setText('subtotal-livros-vlr', fmtBRL(subtotalLivros));
-        setText('consol-material-vlr', fmtBRL(subtotalLivros));
-
-        // CÁLCULO BLOCO 3: PROFESSORES
-        const jornadaDocente = parseInt(document.getElementById('select-jornada-docente').value) || 40;
-        const horaAtividadePct = parseFloat(document.getElementById('select-hora-atividade').value) || 0;
-        const salarioDocente = parseFloat(document.getElementById('input-salario-docente').value) || 0;
-        const encargosPct = parseFloat(document.getElementById('input-encargos-docente').value) || 0;
-
-        // Horas de regência de aula por professor contratado
-        // Se 40h e 1/3 é hora-atividade, 26.67h são regência em sala.
-        const horasRegenciaProf = jornadaDocente * (1 - (horaAtividadePct / 100));
-        setText('txt-regencia-por-prof', `${horasRegenciaProf.toFixed(1)} horas / semana`);
-
-        // Demanda de aulas da rede: cada turma tem 120 minutos (2 horas) de atendimento semanal
-        const totalHorasDemandaSemanal = totalTurmas * 2;
-        setText('txt-total-horas-demanda', totalHorasDemandaSemanal);
-
-        // Quantidade de professores necessários (headcount)
-        const headcountProfs = horasRegenciaProf > 0 ? Math.ceil(totalHorasDemandaSemanal / horasRegenciaProf) : 0;
-        setText('txt-headcount-professores', `${headcountProfs} Profs`);
-        setText('txt-formacao-profs', `${headcountProfs} Profs`);
-
-        // Custo do professor com encargos trabalhistas incluídos
-        const custoMensalDocente = salarioDocente * (1 + (encargosPct / 100));
-        const subtotalProfessores = headcountProfs * custoMensalDocente * 12; // 12 Meses de vigência
-        setText('subtotal-professores-vlr', fmtBRL(subtotalProfessores));
-        setText('consol-profs-vlr', fmtBRL(subtotalProfessores));
-
-        // CÁLCULO BLOCO 4: FORMAÇÃO E ASSESSORIA
-        const vlrFormacaoProf = parseFloat(document.getElementById('input-formacao-prof').value) || 0;
-        const subtotalFormacao = headcountProfs * vlrFormacaoProf;
-        setText('subtotal-formacao-vlr', fmtBRL(subtotalFormacao));
-        setText('consol-lanche-vlr', fmtBRL(subtotalFormacao)); // Representa Formação na linha simplificada de consolidação
-
-        const vlrAssessoriaEscola = parseFloat(document.getElementById('input-assessoria-escola').value) || 0;
-        const subtotalAssessoria = 47 * vlrAssessoriaEscola * 12; // 47 escolas sobre 12 meses
-        setText('subtotal-assessoria-vlr', fmtBRL(subtotalAssessoria));
-        setText('consol-equipe-vlr', fmtBRL(subtotalAssessoria));
-
-        // CONSOLIDAÇÃO FINANCEIRA
-        const subtotalProposta = subtotalKits + subtotalLivros + subtotalProfessores + subtotalFormacao + subtotalAssessoria;
-        const numParcelas = parseInt(document.getElementById('select-parcelas').value) || 12;
-        
-        let percentAjuste = 0;
-        if (numParcelas >= 9) {
-            percentAjuste = 0.03;
-            document.getElementById('label-acrescimo').classList.remove('hidden');
-        } else {
-            document.getElementById('label-acrescimo').classList.add('hidden');
+        function setAutosaveStatus(message, tone = 'success') {
+            const status = document.getElementById('autosave-status');
+            if (!status) return;
+            const colors = {
+                success: '#166534',
+                saving: '#003A70',
+                error: '#B91C1C'
+            };
+            status.innerText = message;
+            status.style.color = colors[tone] || colors.success;
         }
 
-        const vlrAjusteFinanceiro = subtotalProposta * percentAjuste;
-        const totalPropostaCompleto = subtotalProposta + vlrAjusteFinanceiro;
-        const vlrParcelaEfetiva = totalPropostaCompleto / numParcelas;
+        function formatAutosaveTime(date = new Date()) {
+            return new Intl.DateTimeFormat('pt-BR', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            }).format(date);
+        }
 
-        setText('valor-ajuste-financeiro', fmtBRL(vlrAjusteFinanceiro));
-        setText('total-geral-proposta', fmtBRL(totalPropostaCompleto));
-        setText('valor-cada-parcela', fmtBRL(vlrParcelaEfetiva));
-    }
+        function prepareReportForStorage(report, options = {}) {
+            const { keepOriginalImage = false, normalize = true } = options;
+            const prepared = normalize ? normalizeReportForStorage(report) : { ...report };
+            delete prepared.rawImage;
+            if (!keepOriginalImage) delete prepared.originalImage;
+            return prepared;
+        }
 
-    function setText(id, value) {
-        const el = document.getElementById(id);
-        if (el) el.innerText = value;
-    }
+        function prepareReportsForStorage(reportList, options = {}) {
+            return (Array.isArray(reportList) ? reportList : []).map((report) => prepareReportForStorage(report, options));
+        }
 
-    // --- STREAMING_CHUNK: Desenvolvendo Exportador de Relatório PDF... ---
-    function gerarPDF() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        const logoImg = document.getElementById('logo-pdf');
-        const dataGeracao = new Date().toLocaleDateString('pt-BR');
+        function scheduleReportsAutosave() {
+            if (autosaveState.isBootstrapping) return;
+            if (autosaveTimers.reports) clearTimeout(autosaveTimers.reports);
+            setAutosaveStatus('Salvando automaticamente...', 'saving');
+            autosaveTimers.reports = setTimeout(() => {
+                saveReportsNow();
+            }, AUTOSAVE_DELAY_MS);
+        }
 
-        // Função de Cabeçalho Corporativo SME Goiânia / Seduc
-        const addHeaderAndFooter = (doc, current, total) => {
-            if (logoImg) {
-                try {
-                    const logoHeight = 14;
-                    const logoWidth = (logoImg.width / logoImg.height) * logoHeight;
-                    doc.addImage(logoImg, 'PNG', 15, 10, logoWidth, logoHeight);
-                } catch (e) {}
+        function scheduleDraftAutosave() {
+            if (autosaveState.isBootstrapping) return;
+            if (autosaveTimers.draft) clearTimeout(autosaveTimers.draft);
+            setAutosaveStatus('Salvando rascunho automaticamente...', 'saving');
+            autosaveTimers.draft = setTimeout(() => {
+                saveDraftNow();
+            }, AUTOSAVE_DELAY_MS);
+        }
+
+        async function saveReportsNow(options = {}) {
+            if (autosaveState.isBootstrapping) return;
+            if (autosaveTimers.reports) {
+                clearTimeout(autosaveTimers.reports);
+                autosaveTimers.reports = null;
             }
-            doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.setTextColor(80, 80, 80);
-            doc.text("Proposta de Parceria SME Goiânia - Robótica Educacional", 15, 28);
-            doc.setFontSize(8); doc.setTextColor(150);
-            doc.text(`Gerado em: ${dataGeracao} | Página ${current} de ${current}`, 105, 285, {align:'center'});
-            doc.setLineWidth(0.5); doc.setDrawColor(220); doc.line(15, 31, 195, 31);
+
+            const operation = async () => {
+                try {
+                    reports = prepareReportsForStorage(reports, { keepOriginalImage: false, normalize: true });
+                    await localforage.setItem(REPORTS_STORAGE_KEY, reports);
+                    setAutosaveStatus(`Última alteração salva às ${formatAutosaveTime()}.`, 'success');
+                } catch (e) {
+                    console.error(e);
+                    setAutosaveStatus('Não foi possível salvar automaticamente.', 'error');
+                    if (options.alertOnError) {
+                        alert("⚠️ Erro ao salvar as alterações na base de dados local.");
+                    }
+                    if (options.throwOnError) throw e;
+                }
+            };
+
+            autosaveChains.reports = autosaveChains.reports.then(operation, operation);
+            return autosaveChains.reports;
+        }
+
+        async function saveDraftNow(options = {}) {
+            if (autosaveState.isBootstrapping) return;
+            if (autosaveTimers.draft) {
+                clearTimeout(autosaveTimers.draft);
+                autosaveTimers.draft = null;
+            }
+
+            const operation = async () => {
+                try {
+                    const draft = prepareReportsForStorage(parsedReportsCache, { keepOriginalImage: true, normalize: false });
+                    if (draft.length === 0) {
+                        await localforage.removeItem(DRAFT_STORAGE_KEY);
+                    } else {
+                        await localforage.setItem(DRAFT_STORAGE_KEY, draft);
+                    }
+                    setAutosaveStatus(draft.length > 0 ? `Rascunho salvo às ${formatAutosaveTime()}.` : `Última alteração salva às ${formatAutosaveTime()}.`, 'success');
+                } catch (e) {
+                    console.error(e);
+                    setAutosaveStatus('Não foi possível salvar o rascunho automaticamente.', 'error');
+                    if (options.alertOnError) {
+                        alert("⚠️ Erro ao salvar o rascunho da importação.");
+                    }
+                    if (options.throwOnError) throw e;
+                }
+            };
+
+            autosaveChains.draft = autosaveChains.draft.then(operation, operation);
+            return autosaveChains.draft;
+        }
+
+        document.getElementById('current-date-display').innerText = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long' }).format(new Date());
+
+        // Inicialização Assíncrona para o localForage (IndexedDB)
+        window.onload = async () => { 
+            try {
+                // Tenta carregar a base de dados robusta do IndexedDB
+                reports = await localforage.getItem(REPORTS_STORAGE_KEY) || [];
+                parsedReportsCache = await localforage.getItem(DRAFT_STORAGE_KEY) || [];
+                
+                // Rotina de Migração Segura: Se o IndexedDB estiver vazio, mas existir dados antigos no localStorage (V34)
+                if (reports.length === 0) {
+                    const oldData = localStorage.getItem('fiegReportsV34');
+                    if (oldData) {
+                        reports = JSON.parse(oldData);
+                        await localforage.setItem(REPORTS_STORAGE_KEY, reports);
+                    }
+                }
+            } catch (e) {
+                reports = [];
+                parsedReportsCache = [];
+            }
+            reports = Array.isArray(reports) ? reports.map(normalizeReportForStorage) : [];
+            parsedReportsCache = Array.isArray(parsedReportsCache) ? parsedReportsCache : [];
+            autosaveState.isBootstrapping = false;
+            setTimeout(() => {
+                window.applyFilters();
+                if (parsedReportsCache.length > 0) {
+                    window.openModal();
+                    setAutosaveStatus(`Rascunho recuperado às ${formatAutosaveTime()}.`, 'success');
+                } else {
+                    setAutosaveStatus(`Base carregada às ${formatAutosaveTime()}.`, 'success');
+                }
+            }, 100);
+        }
+
+        // --- SISTEMA DE MODAL DE CONFIRMAÇÃO ---
+        var pendingConfirmAction = null;
+
+        window.openConfirmModal = function(title, text, callback) {
+            document.getElementById('confirm-modal-title').innerHTML = `<i class="ph-fill ph-warning-circle" aria-hidden="true"></i> ${escapeHtml(title)}`;
+            document.getElementById('confirm-modal-text').innerText = text;
+            pendingConfirmAction = callback;
+            document.getElementById('custom-confirm-modal').classList.remove('hidden');
+        }
+
+        window.closeConfirmModal = function() {
+            document.getElementById('custom-confirm-modal').classList.add('hidden');
+            pendingConfirmAction = null;
+        }
+
+        window.executeConfirmAction = function() {
+            if(pendingConfirmAction) pendingConfirmAction();
+            window.closeConfirmModal();
+        }
+
+        // --- LÓGICA DO CROPPER (ENQUADRAMENTO) ---
+        var currentCropper = null;
+        var currentCropId = null;
+        var isEditingFromCache = false;
+
+        window.openCropModal = function(id, fromCache = false) {
+            currentCropId = id;
+            isEditingFromCache = fromCache;
+            let item = fromCache ? parsedReportsCache.find(r => r.id === id) : reports.find(r => r.id === id);
+            
+            if (!item || !item.originalImage) {
+                alert("A imagem original foi descartada para otimizar a memória.\nPara reenquadrar a foto, exclua esta matéria e importe o arquivo Word novamente.");
+                return;
+            }
+
+            const imgTarget = document.getElementById('crop-image-target');
+            imgTarget.src = item.originalImage;
+            
+            document.getElementById('crop-modal').classList.remove('hidden');
+
+            if (currentCropper) {
+                currentCropper.destroy();
+            }
+
+            setTimeout(() => {
+                currentCropper = new Cropper(imgTarget, {
+                    aspectRatio: 2 / 1, // Widescreen
+                    viewMode: 1, 
+                    dragMode: 'move',
+                    autoCropArea: 1,
+                    restore: false,
+                    guides: true,
+                    center: true,
+                    highlight: false,
+                    cropBoxMovable: true,
+                    cropBoxResizable: true,
+                    toggleDragModeOnDblclick: false,
+                });
+            }, 100);
+        }
+
+        window.closeCropModal = function() {
+            document.getElementById('crop-modal').classList.add('hidden');
+            if (currentCropper) {
+                currentCropper.destroy();
+                currentCropper = null;
+            }
+        }
+
+        window.applyCrop = async function() {
+            if (!currentCropper) return;
+            
+            const canvas = currentCropper.getCroppedCanvas({
+                width: 1000,
+                height: 500,
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high',
+            });
+            
+            const newImageBase64 = canvas.toDataURL('image/jpeg', 0.85); 
+            
+            if (isEditingFromCache) {
+                let item = parsedReportsCache.find(r => r.id === currentCropId);
+                if (item) {
+                    item.image = newImageBase64;
+                    renderReviewCards();
+                    await saveDraftNow({ alertOnError: true });
+                }
+            } else {
+                let item = reports.find(r => r.id === currentCropId);
+                if (item) {
+                    item.image = newImageBase64;
+                    try {
+                        // Utiliza o novo IndexedDB ilimitado
+                        await saveReportsNow({ alertOnError: true });
+                    } catch(e) {
+                        alert("⚠️ Erro crítico ao salvar as alterações na base de dados.");
+                    }
+                    applyFilters();
+                }
+            }
+            
+            closeCropModal();
+        }
+
+        // Processamento de Imagem
+        function processImageForStorage(base64Str) {
+            return new Promise((resolve) => {
+                if(!base64Str) { resolve({ original: null, cropped: null }); return; }
+                const img = new Image(); 
+                img.src = base64Str;
+                img.onload = () => { 
+                    const origCanvas = document.createElement('canvas');
+                    let oW = img.width;
+                    let oH = img.height;
+                    const MAX_ORIG = 800; 
+                    if (oW > oH && oW > MAX_ORIG) { oH *= MAX_ORIG / oW; oW = MAX_ORIG; }
+                    else if (oH > MAX_ORIG) { oW *= MAX_ORIG / oH; oH = MAX_ORIG; }
+                    origCanvas.width = oW;
+                    origCanvas.height = oH;
+                    const origCtx = origCanvas.getContext('2d');
+                    origCtx.drawImage(img, 0, 0, oW, oH);
+                    const originalImage = origCanvas.toDataURL('image/jpeg', 0.50); 
+
+                    const cropCanvas = document.createElement('canvas'); 
+                    cropCanvas.width = 1000; 
+                    cropCanvas.height = 500; 
+                    const cropCtx = cropCanvas.getContext('2d'); 
+                    const scale = Math.max(cropCanvas.width / img.width, cropCanvas.height / img.height);
+                    const x = (cropCanvas.width / 2) - (img.width / 2) * scale;
+                    const y = (cropCanvas.height / 2) - (img.height / 2) * scale;
+                    cropCtx.drawImage(img, x, y, img.width * scale, img.height * scale); 
+                    const croppedImage = cropCanvas.toDataURL('image/jpeg', 0.70); 
+
+                    resolve({ original: originalImage, cropped: croppedImage });
+                }; 
+                img.onerror = () => resolve({ original: null, cropped: null }); 
+            });
+        }
+
+        function normalizeEditorialWhitespace(text, preserveParagraphs = false) {
+            let value = String(text ?? '').replace(/\r/g, '\n').replace(/\u00A0/g, ' ');
+            if (preserveParagraphs) {
+                return value
+                    .replace(/[ \t\f\v]+/g, ' ')
+                    .replace(/[ \t]*\n[ \t]*/g, '\n')
+                    .replace(/\n{3,}/g, '\n\n')
+                    .trim();
+            }
+            return value.replace(/\s+/g, ' ').trim();
+        }
+
+        function ensureFinalPunctuationWithinLimit(text, maxLength) {
+            let value = normalizeEditorialWhitespace(text, true).replace(/[\s,;:/\-–—]+$/, '');
+            if (!value) return '';
+            if (/[.!?]$/.test(value)) return value.length <= maxLength ? value : value.substring(0, maxLength);
+            if (value.length >= maxLength) {
+                value = value.substring(0, Math.max(0, maxLength - 1)).replace(/[\s,;:/\-–—]+$/, '');
+            }
+            return value ? `${value}.` : '';
+        }
+
+        function semanticTrim(text, maxLength, isBody = false) {
+            if (!maxLength || maxLength < 1) return '';
+            let value = normalizeEditorialWhitespace(text, isBody);
+            if (!value) return '';
+
+            if (value.length > maxLength) {
+                const reservedForPunctuation = isBody ? 1 : 0;
+                const cutLimit = Math.max(1, maxLength - reservedForPunctuation);
+                let candidate = value.substring(0, cutLimit + 1);
+
+                if (isBody) {
+                    const lastSentence = Math.max(candidate.lastIndexOf('.'), candidate.lastIndexOf('!'), candidate.lastIndexOf('?'));
+                    const minimumUsefulSentence = Math.min(80, Math.floor(cutLimit * 0.45));
+                    if (lastSentence >= minimumUsefulSentence) {
+                        candidate = candidate.substring(0, lastSentence + 1);
+                    } else {
+                        candidate = candidate.substring(0, cutLimit);
+                    }
+                } else {
+                    candidate = candidate.substring(0, cutLimit);
+                }
+
+                const lastBreak = Math.max(candidate.lastIndexOf(' '), candidate.lastIndexOf('\n'));
+                if (lastBreak > Math.min(35, Math.floor(cutLimit * 0.65)) && candidate.length >= cutLimit) {
+                    candidate = candidate.substring(0, lastBreak);
+                }
+
+                value = candidate.replace(/[\s,;:/\-–—]+$/, '');
+            }
+
+            if (isBody) {
+                return ensureFinalPunctuationWithinLimit(value, maxLength);
+            }
+            return value.length <= maxLength ? value : value.substring(0, maxLength).replace(/[\s,;:/\-–—]+$/, '');
+        }
+
+        function cleanAndImproveText(text) {
+            if(!text) return "";
+            let clean = text.replace(/<[^>]*>?/gm, ''); 
+            clean = clean.replace(/\*/g, '');
+            clean = clean.replace(/^\s*\d{1,2}\s+de\s+[a-zA-ZçÇ]+\s*(de\s*\d{4})?\s*[-–]\s*/i, '');
+            clean = clean.replace(/^(?:Entre\s+(?:os\s+)?dias\s+|De\s+)?\d{1,2}(?:\s*(?:a|e|até|a)\s*\d{1,2})?\s+de\s+[a-zA-ZçÇ]+(?:\s+de\s+\d{4})?\s*(?:[-–,.:])?\s*/i, '');
+            
+            const replacements = [
+                [/\bRealizamos,?\b/gi, 'A unidade realizou'],
+                [/\bParticipamos,?\b/gi, 'Representantes da unidade participaram'],
+                [/\bPromovemos,?\b/gi, 'A instituição promoveu'],
+                [/\bDemos início\b/gi, 'Foi dado início'],
+                [/\bIniciamos,?\b/gi, 'As atividades foram iniciadas com'],
+                [/\bCelebramos,?\b/gi, 'A unidade celebrou'],
+                [/\bRecebemos,?\b/gi, 'A unidade recebeu'],
+                [/\bFomos recebidos\b/gi, 'A comitiva institucional foi recebida'],
+                [/\bAcompanhamos,?\b/gi, 'A equipe acompanhou'],
+                [/\bEncerramos\b/gi, 'A unidade encerrou'],
+                [/\bNossa aluna\b/gi, 'A aluna'],
+                [/\bNossos alunos\b/gi, 'Os alunos'],
+                [/\bNossa equipe\b/gi, 'A equipe institucional']
+            ];
+
+            replacements.forEach(([pattern, replacement]) => {
+                clean = clean.replace(pattern, replacement);
+            });
+
+            clean = clean.replace(/[ \t\f\v]{2,}/g, ' ');
+            clean = clean.replace(/[ \t]*\n[ \t]*/g, '\n');
+            clean = clean.replace(/\n{3,}/g, '\n\n');
+            clean = clean.trim();
+            if(clean.length > 0) clean = clean.charAt(0).toUpperCase() + clean.slice(1);
+            return clean;
+        }
+
+        function splitIntoSentences(text) {
+            const normalized = normalizeEditorialWhitespace(text, false);
+            if (!normalized) return [];
+            return normalized.match(/[^.!?]+[.!?]+|[^.!?]+$/g)?.map(sentence => sentence.trim()).filter(Boolean) || [];
+        }
+
+        function stripIntroductoryDate(text) {
+            return normalizeEditorialWhitespace(text, false)
+                .replace(/^(?:No dia|Nos dias|Entre os dias|De)\s+\d{1,2}(?:\s*(?:a|e|até)\s*\d{1,2})?\s+de\s+[a-zA-ZçÇ]+(?:\s+de\s+\d{4})?\s*(?:[-–,.:])?\s*/i, '')
+                .replace(/^\d{1,2}(?:\s*e\s*\d{1,2})?\s+de\s+[a-zA-ZçÇ]+(?:\s+de\s+\d{4})?\s*(?:[-–,.:])?\s*/i, '')
+                .trim();
+        }
+
+        function formatUnitForHeadline(unit) {
+            const normalized = normalizeEditorialWhitespace(unit, false).replace(/\*/g, '');
+            if (!normalized || normalized.length > 48) return '';
+            return normalized
+                .toLowerCase()
+                .replace(/\b(sesi|senai|fatec|fieg)\b/g, token => token.toUpperCase())
+                .replace(/(^|[\s/-])([a-záéíóúâêôãõç])/g, (_, prefix, letter) => `${prefix}${letter.toUpperCase()}`)
+                .replace(/\bE\b/g, 'e');
+        }
+
+        function normalizeForComparison(text) {
+            return normalizeEditorialWhitespace(text, false)
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, ' ')
+                .trim();
+        }
+
+        function lowerFirstLetter(text) {
+            const value = normalizeEditorialWhitespace(text, false);
+            return value ? value.charAt(0).toLowerCase() + value.slice(1) : '';
+        }
+
+        function escapeRegExp(text) {
+            return String(text || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function removeLegacyAutoHighlightPrefix(title, unitLabel) {
+            let value = normalizeEditorialWhitespace(title, false);
+            const prefixes = [unitLabel, 'A pauta'].filter(Boolean);
+
+            for (const prefix of prefixes) {
+                const pattern = new RegExp(`^${escapeRegExp(prefix)}\\s+destaca\\s+`, 'i');
+                value = value.replace(pattern, '').trim();
+            }
+
+            return value.replace(/^destaca\s+/i, '').trim();
+        }
+
+        function simplifyWeakHeadlineOpening(title) {
+            let value = normalizeEditorialWhitespace(title, false);
+            const weakOpenings = [
+                [/^aconteceu\s+(?:a|o|as|os|uma|um)\s+/i, ''],
+                [/^aconteceram\s+(?:as|os|umas|uns)\s+/i, ''],
+                [/^foi realizada\s+(?:a|uma)\s+/i, ''],
+                [/^foi realizado\s+(?:o|um)\s+/i, ''],
+                [/^foram realizadas\s+(?:as|umas)\s+/i, ''],
+                [/^foram realizados\s+(?:os|uns)\s+/i, '']
+            ];
+
+            weakOpenings.forEach(([pattern, replacement]) => {
+                value = value.replace(pattern, replacement);
+            });
+
+            return value.trim();
+        }
+
+        function selectHeadlinePrefixVerb(title, unit = '', sourceText = '') {
+            const context = normalizeForComparison(`${title} ${unit} ${sourceText}`);
+            const contextualVerbs = [
+                { pattern: /\b(avaliacao|certificacao|prova|oficina|palestra|curso|treinamento|reuniao|visita|atividade)\b/, verb: 'realiza' },
+                { pattern: /\b(evento|campanha|programacao|encontro|workshop|sipat|acao)\b/, verb: 'promove' },
+                { pattern: /\b(parceria|relacionamento|industria|atuacao|estrategia|seguranca)\b/, verb: 'fortalece' },
+                { pattern: /\b(resultado|projeto|iniciativa|programa|certificado)\b/, verb: 'apresenta' },
+                { pattern: /\b(comitiva|representantes|empresa|equipe|alunos|estudantes)\b/, verb: 'recebe' }
+            ];
+
+            const contextualMatch = contextualVerbs.find(item => item.pattern.test(context));
+            if (contextualMatch) return contextualMatch.verb;
+
+            const fallbackVerbs = ['apresenta', 'registra', 'evidencia', 'ressalta', 'valoriza'];
+            const hash = context.split('').reduce((total, char) => total + char.charCodeAt(0), 0);
+            return fallbackVerbs[hash % fallbackVerbs.length];
+        }
+
+        function headlineSubjectIsPlural(unitLabel) {
+            const value = normalizeEditorialWhitespace(unitLabel, false);
+            return /\s+e\s+/i.test(value) && !/^SESI\s+SENAI\b/i.test(value);
+        }
+
+        function conjugateHeadlineVerb(verb, unitLabel = '') {
+            const plural = headlineSubjectIsPlural(unitLabel);
+            const forms = {
+                realiza: ['realiza', 'realizam'],
+                promove: ['promove', 'promovem'],
+                fortalece: ['fortalece', 'fortalecem'],
+                apresenta: ['apresenta', 'apresentam'],
+                registra: ['registra', 'registram'],
+                evidencia: ['evidencia', 'evidenciam'],
+                ressalta: ['ressalta', 'ressaltam'],
+                valoriza: ['valoriza', 'valorizam'],
+                participa: ['participa', 'participam'],
+                recebe: ['recebe', 'recebem']
+            };
+
+            return forms[verb] ? forms[verb][plural ? 1 : 0] : verb;
+        }
+
+        function cleanHeadlineFragment(fragment, maxLength = 76) {
+            let value = normalizeEditorialWhitespace(fragment, false)
+                .replace(/\s*\([^)]{6,}\)\s*/g, ' ')
+                .replace(/\b(?:Sr|Sra|Srta)\.?\s+.*$/i, '')
+                .replace(/\s+(?:onde|com o objetivo|visando|com o intuito|com a finalidade|para alinhar|no período)\b.*$/i, '')
+                .replace(/[,:;.\s]+$/g, '')
+                .trim();
+
+            value = semanticTrim(value, maxLength, false).replace(/[.!?]$/g, '').trim();
+            return value;
+        }
+
+        function extractInstitutionalContext(sourceText) {
+            const value = normalizeEditorialWhitespace(sourceText, false).split(/\bonde\b/i)[0];
+            const patterns = [
+                { regex: /\b(?:na|à)\s+indústria\s+([^,.;]+)/i, prefix: 'à indústria' },
+                { regex: /\b(?:na|à)\s+empresa\s+([^,.;]+)/i, prefix: 'na empresa' },
+                { regex: /\b(?:no|ao)\s+SESI\s+([^,.;]+)/i, prefix: 'no SESI' },
+                { regex: /\b(?:no|ao)\s+SENAI\s+([^,.;]+)/i, prefix: 'no SENAI' },
+                { regex: /\b(?:na|à)\s+unidade\s+([^,.;]+)/i, prefix: 'na unidade' }
+            ];
+
+            for (const item of patterns) {
+                const match = value.match(item.regex);
+                if (match && match[1]) {
+                    const target = cleanHeadlineFragment(match[1], 44);
+                    return target ? `${item.prefix} ${target}` : '';
+                }
+            }
+
+            return '';
+        }
+
+        function extractCertificationSubject(sourceText) {
+            const value = normalizeEditorialWhitespace(sourceText, false);
+            const match = value.match(/\b(?:para|da|de)\s+(Certificação[^,.;]+)/i);
+            if (match && match[1]) {
+                return cleanHeadlineFragment(match[1], 74).replace(/\bInternacional\b/g, 'internacional');
+            }
+            if (/\bcertifica/i.test(value)) return 'certificação profissional';
+            return '';
+        }
+
+        function extractNamedAction(sourceText, actionWord) {
+            const value = normalizeEditorialWhitespace(sourceText, false);
+            const regex = new RegExp(`\\b${actionWord}\\s+(?:de\\s+)?([^,.;]+)`, 'i');
+            const match = value.match(regex);
+            if (!match || !match[1]) return '';
+
+            const detail = cleanHeadlineFragment(match[1], 54);
+            return detail ? `${actionWord} de ${lowerFirstLetter(detail)}` : actionWord;
+        }
+
+        function buildHeadline(subject, verb, complement) {
+            const title = `${subject} ${conjugateHeadlineVerb(verb, subject)} ${complement}`.replace(/\s+/g, ' ').trim();
+            return semanticTrim(title, JOURNALISTIC_TITLE_MAX, false).replace(/[.!?]$/g, '');
+        }
+
+        function extractConciseHeadlineTopic(sourceText, unitLabel = '') {
+            let value = simplifyWeakHeadlineOpening(removeLegacyAutoHighlightPrefix(stripIntroductoryDate(sourceText), unitLabel));
+            value = value
+                .replace(/^(?:o|a|os|as)\s+(?:diretor(?:a)?|gerente|supervisor(?:a)?|instrutor(?:a)?|coordenador(?:a)?|analista|equipe|alunos?)\b.{0,160}?\b(?:realizou|realizaram|participou|participaram|promoveu|promoveram|recebeu|receberam|apresentou|apresentaram)\s+(?:de\s+)?/i, '')
+                .replace(/^(?:a unidade|a instituição|representantes da unidade|a equipe institucional)\s+(?:realizou|realizaram|promoveu|promoveram|participou|participaram|recebeu|receberam|apresentou|apresentaram|desenvolveu|desenvolveram)\s+(?:de\s+)?/i, '')
+                .replace(/^(?:realizou|realizaram|promoveu|promoveram|participou|participaram|recebeu|receberam|apresentou|apresentaram|desenvolveu|desenvolveram)\s+(?:de\s+)?/i, '')
+                .replace(/^fo(?:i|ram)\s+(?:realizad[ao]s?|promovid[ao]s?|apresentad[ao]s?|entregues?|iniciad[ao]s?|desenvolvid[ao]s?)\s+(?:de\s+)?/i, '');
+
+            value = value.split(/\s*,\s*(?:onde|com o objetivo|visando|com o intuito|para|no período)\b/i)[0];
+            return cleanHeadlineFragment(value, 66);
+        }
+
+        function synthesizeJournalisticTitle(sourceText, unit = '') {
+            const source = simplifyWeakHeadlineOpening(removeLegacyAutoHighlightPrefix(stripIntroductoryDate(sourceText), formatUnitForHeadline(unit)));
+            const subject = formatUnitForHeadline(unit) || 'A unidade';
+            const context = normalizeForComparison(source);
+            const place = extractInstitutionalContext(source);
+
+            if (/\bvisita\b/.test(context) && /\b(tecnica|comercial|industria|empresa)\b/.test(context)) {
+                const visitType = /\btecnica\s*comercial\b|\btecnica\s+e\s+comercial\b|\bcomercial\b/.test(context)
+                    ? 'visita técnica e comercial'
+                    : 'visita técnica';
+                return buildHeadline(subject, 'realiza', `${visitType}${place ? ` ${place}` : ''}`);
+            }
+
+            if (/\breuniao\b/.test(context)) {
+                return buildHeadline(subject, 'participa', `de reunião${place ? ` ${place}` : ' institucional'}`);
+            }
+
+            if (/\bavaliacao\b/.test(context) || /\bprova\b/.test(context) || /\bcertificacao\b/.test(context)) {
+                const certification = extractCertificationSubject(source);
+                const complement = certification ? `avaliação para ${lowerFirstLetter(certification)}` : 'avaliação de certificação';
+                return buildHeadline(subject, 'realiza', complement);
+            }
+
+            if (/\b(oficina|palestra|curso|treinamento|workshop)\b/.test(context)) {
+                const activity = extractNamedAction(source, 'curso') || extractNamedAction(source, 'oficina') || extractNamedAction(source, 'palestra') || extractNamedAction(source, 'treinamento') || 'atividade formativa';
+                return buildHeadline(subject, 'promove', lowerFirstLetter(activity));
+            }
+
+            if (/\b(parceria|alinhamento|prospecta|empresa|industria)\b/.test(context)) {
+                return buildHeadline(subject, 'fortalece', `relacionamento institucional${place ? ` ${place}` : ''}`);
+            }
+
+            const topic = extractConciseHeadlineTopic(source, subject);
+            if (topic) {
+                return buildHeadline(subject, selectHeadlinePrefixVerb(topic, subject, source), lowerFirstLetter(topic));
+            }
+
+            return buildHeadline(subject, 'registra', 'pauta institucional');
+        }
+
+        function getSignificantTitleTokens(text) {
+            const stopwords = new Set(['para', 'com', 'uma', 'um', 'que', 'onde', 'pelo', 'pela', 'dos', 'das', 'de', 'do', 'da', 'em', 'no', 'na', 'ao', 'aos', 'as', 'os', 'e', 'o', 'a', 'sesi', 'senai', 'fieg']);
+            return normalizeForComparison(text)
+                .split(/\s+/)
+                .filter(token => token.length > 3 && !stopwords.has(token));
+        }
+
+        function titleLooksCopiedFromSource(title, sourceText) {
+            const cleanTitle = normalizeEditorialWhitespace(title, false);
+            const source = normalizeEditorialWhitespace(sourceText, false);
+            if (!cleanTitle || !source || cleanTitle.length < 90) return false;
+
+            const titleKey = normalizeForComparison(cleanTitle);
+            const sourceKey = normalizeForComparison(source);
+            if (sourceKey.includes(titleKey) && titleKey.split(/\s+/).length >= 8) return true;
+
+            const titleTokens = getSignificantTitleTokens(cleanTitle);
+            if (titleTokens.length < 8) return false;
+
+            const sourceTokens = new Set(getSignificantTitleTokens(source));
+            const overlap = titleTokens.filter(token => sourceTokens.has(token)).length / titleTokens.length;
+            const hasRoster = /\b(diretor|diretora|gerente|supervisor|supervisora|instrutor|instrutora|coordenador|coordenadora|juntamente)\b/i.test(cleanTitle);
+            const hasManyClauses = (cleanTitle.match(/,/g) || []).length >= 2;
+
+            return overlap >= 0.72 && (cleanTitle.length > 110 || hasRoster || hasManyClauses);
+        }
+
+        function titleHasJournalisticVerb(text) {
+            return /\b(realiza|realizou|realizam|realizaram|promove|promoveu|promovem|promoveram|participa|participou|participam|participaram|recebe|recebeu|recebem|receberam|inicia|iniciou|iniciam|iniciaram|celebra|celebrou|celebram|celebraram|encerra|encerrou|encerram|encerraram|acompanha|acompanhou|acompanham|acompanharam|fortalece|fortaleceu|fortalecem|fortaleceram|apresenta|apresentou|apresentam|apresentaram|desenvolve|desenvolveu|desenvolvem|desenvolveram|entrega|entregou|entregam|entregaram|capacita|capacitou|capacitam|capacitaram|forma|formou|formam|formaram|sedia|sediou|sediam|sediaram|reúne|reuniu|reúnem|reuniram|amplia|ampliou|ampliam|ampliaram|leva|levou|levam|levaram|orienta|orientou|orientam|orientaram|evidencia|evidenciou|evidenciam|evidenciaram|ressalta|ressaltou|ressaltam|ressaltaram|valoriza|valorizou|valorizam|valorizaram|registra|registrou|registram|registraram|marca|marcou|marcam|marcaram|acontece|aconteceu|acontecem|aconteceram|destaca|destacou|destacam|destacaram)\b/i.test(text);
+        }
+
+        function formatJournalisticTitle(text, unit = '', sourceText = '') {
+            let title = stripIntroductoryDate(text || sourceText);
+            const unitLabel = formatUnitForHeadline(unit);
+            const unitKey = normalizeForComparison(unit);
+            const source = normalizeEditorialWhitespace(sourceText, false);
+
+            title = title.replace(/^[•\-–—\d.)\s]+/, '').replace(/[,:;]\s*$/, '').trim();
+            title = title.replace(/^Foi dado início\s+(?:ao|à|a|aos|às)?\s*/i, 'A unidade iniciou ');
+            title = title.replace(/^As atividades foram iniciadas com\s*/i, 'A unidade iniciou ');
+            title = title.replace(/^Representantes da unidade participaram(?:\s+(?:de|da|do|dos|das|em))?\s*/i, 'A unidade participou de ');
+            title = title.replace(/^A comitiva institucional foi recebida(?:\s+(?:por|pela|pelo|em))?\s*/i, 'A comitiva institucional participou de ');
+            title = title.replace(/^(A unidade|A instituição)\b/i, unitLabel || 'A unidade');
+            title = removeLegacyAutoHighlightPrefix(title, unitLabel);
+            title = simplifyWeakHeadlineOpening(title);
+
+            if (!title || normalizeForComparison(title) === unitKey) {
+                title = sourceText || `A pauta da ${unitLabel || 'unidade'} apresenta novo destaque institucional.`;
+                title = removeLegacyAutoHighlightPrefix(title, unitLabel);
+                title = simplifyWeakHeadlineOpening(title);
+            }
+
+            if (titleLooksCopiedFromSource(title, source)) {
+                title = synthesizeJournalisticTitle(source || title, unit) || title;
+            }
+
+            if (!titleHasJournalisticVerb(title)) {
+                const prefixVerb = selectHeadlinePrefixVerb(title, unitLabel, sourceText);
+                title = `${unitLabel || 'A pauta'} ${conjugateHeadlineVerb(prefixVerb, unitLabel)} ${lowerFirstLetter(title)}`;
+            }
+
+            title = title.charAt(0).toUpperCase() + title.slice(1);
+            const maxLength = Math.min(EDITORIAL_LIMITS.title, JOURNALISTIC_TITLE_MAX);
+            return semanticTrim(ensureFinalPunctuationWithinLimit(title, maxLength), maxLength, true);
+        }
+
+        function generateTitle(sourceText, unit = '') {
+            const syntheticTitle = synthesizeJournalisticTitle(sourceText, unit);
+            return formatJournalisticTitle(syntheticTitle || sourceText, unit, sourceText);
+        }
+
+        function extractObjectiveSentence(sourceText) {
+            let splitters = ['com o objetivo de', 'visando a', 'visando o', 'visando', 'com o intuito de', 'para promover', 'com a finalidade de'];
+            let objective = '';
+            for (let s of splitters) {
+                const regex = new RegExp(`\\s+${s}\\s+`, 'i');
+                if (regex.test(sourceText)) {
+                    const parts = sourceText.split(regex);
+                    objective = parts[1].trim().replace(/[,:;.]\s*$/, '');
+                    break;
+                }
+            }
+            return objective;
+        }
+
+        function generateExecutiveSummary(sourceText, title = '') {
+            const sentences = splitIntoSentences(sourceText);
+            const firstSentence = stripIntroductoryDate(sentences[0] || sourceText);
+            const secondSentence = sentences[1] ? stripIntroductoryDate(sentences[1]) : '';
+            const objective = extractObjectiveSentence(sourceText);
+            let lead = firstSentence;
+
+            if (objective) {
+                const titleBase = normalizeEditorialWhitespace(title, false).replace(/[.!?]$/, '');
+                lead = `${titleBase || firstSentence} e busca ${lowerFirstLetter(objective)}.`;
+            } else if (secondSentence && `${firstSentence} ${secondSentence}`.length <= EDITORIAL_LIMITS.lead) {
+                lead = `${firstSentence} ${secondSentence}`;
+            }
+
+            return semanticTrim(lead, EDITORIAL_LIMITS.lead, true);
+        }
+
+        function applyEditorialFieldsToReport(report, rawContent) {
+            const cleanContent = cleanAndImproveText(rawContent);
+            const paragraphs = cleanContent.split(/\n+/).map(p => p.trim()).filter(Boolean);
+            if (paragraphs.length > 0) {
+                const firstPar = paragraphs[0];
+                const firstParagraphSentences = splitIntoSentences(firstPar);
+                const title = generateTitle(firstPar, report.unit);
+                report.title = title;
+                report.lead = generateExecutiveSummary(firstPar, title);
+
+                const bodyArr = [];
+                const restOfFirstParagraph = firstParagraphSentences.slice(1).join(' ');
+                if (restOfFirstParagraph) bodyArr.push(restOfFirstParagraph);
+                for (let j = 1; j < paragraphs.length; j++) bodyArr.push(paragraphs[j]);
+                report.content = semanticTrim(bodyArr.join('\n\n'), EDITORIAL_LIMITS.content, true);
+            }
+            if (!report.type) report.type = inferCategory(rawContent);
+            if (!report.date) report.date = new Date().toISOString().split('T')[0];
+            return normalizeReportForStorage(report);
+        }
+
+        function normalizeReportForStorage(report) {
+            const normalized = { ...report };
+            normalized.unit = normalizeEditorialWhitespace(normalized.unit, false);
+            const titleSource = `${normalized.lead || ''} ${normalized.content || ''}`.trim();
+            normalized.title = formatJournalisticTitle(normalized.title, normalized.unit, titleSource);
+            normalized.lead = semanticTrim(normalized.lead, EDITORIAL_LIMITS.lead, true);
+            normalized.content = semanticTrim(normalized.content, EDITORIAL_LIMITS.content, true);
+            return normalized;
+        }
+
+        function ensureDistinctTitles(reportList) {
+            const seen = new Set();
+            reportList.forEach((item) => {
+                item.title = formatJournalisticTitle(item.title, item.unit, `${item.lead || ''} ${item.content || ''}`);
+                let key = normalizeForComparison(item.title);
+                if (seen.has(key)) {
+                    const alternativeSource = splitIntoSentences(`${item.lead || ''} ${item.content || ''}`)
+                        .find(sentence => normalizeForComparison(sentence) !== key);
+                    if (alternativeSource) {
+                        item.title = generateTitle(alternativeSource, item.unit);
+                        key = normalizeForComparison(item.title);
+                    }
+                }
+                if (seen.has(key)) {
+                    const dateContext = item.date ? ` em ${formatReportDate(item.date)}` : '';
+                    item.title = semanticTrim(`${item.title.replace(/[.!?]$/, '')}${dateContext}.`, EDITORIAL_LIMITS.title, true);
+                    key = normalizeForComparison(item.title);
+                }
+                seen.add(key);
+            });
+        }
+
+        function enforceEditorialLimit(field, limitKey, counterId) {
+            const limit = EDITORIAL_LIMITS[limitKey];
+            if (!field || !limit) return;
+            if (field.value.length > limit) {
+                field.value = field.value.substring(0, limit);
+            }
+            const counter = document.getElementById(counterId);
+            if (counter) counter.innerText = `${field.value.length}/${limit}`;
+        }
+
+        function syncParsedReportFromControls(id) {
+            const item = parsedReportsCache.find((report) => report.id === id);
+            if (!item) return false;
+            const fieldMap = {
+                unit: `edit-unit-${id}`,
+                date: `edit-date-${id}`,
+                title: `edit-title-${id}`,
+                lead: `edit-lead-${id}`,
+                content: `edit-content-${id}`,
+                type: `edit-type-${id}`
+            };
+
+            Object.entries(fieldMap).forEach(([field, elementId]) => {
+                const element = document.getElementById(elementId);
+                if (element) item[field] = element.value;
+            });
+            return true;
+        }
+
+        function syncAllParsedReportsFromControls() {
+            parsedReportsCache.forEach((item) => syncParsedReportFromControls(item.id));
+        }
+
+        function syncSingleEditorToReport() {
+            const modal = document.getElementById('edit-single-modal');
+            if (!modal || modal.classList.contains('hidden')) return false;
+
+            const id = document.getElementById('edit-single-id')?.value;
+            const index = reports.findIndex((report) => report.id === id);
+            if (index === -1) return false;
+
+            reports[index].unit = document.getElementById('edit-single-unit').value;
+            reports[index].type = document.getElementById('edit-single-type').value;
+            reports[index].date = document.getElementById('edit-single-date').value;
+            reports[index].title = document.getElementById('edit-single-title').value;
+            reports[index].lead = document.getElementById('edit-single-lead').value;
+            reports[index].content = document.getElementById('edit-single-content').value;
+            return true;
+        }
+
+        function syncActiveEditorsFromDom() {
+            syncAllParsedReportsFromControls();
+            syncSingleEditorToReport();
+        }
+
+        function bindReviewAutosaveControls() {
+            parsedReportsCache.forEach((item) => {
+                const ids = [
+                    `edit-unit-${item.id}`,
+                    `edit-date-${item.id}`,
+                    `edit-title-${item.id}`,
+                    `edit-lead-${item.id}`,
+                    `edit-content-${item.id}`,
+                    `edit-type-${item.id}`
+                ];
+
+                ids.forEach((elementId) => {
+                    const element = document.getElementById(elementId);
+                    if (!element || element.dataset.autosaveBound === 'true') return;
+                    const updateDraft = () => {
+                        syncParsedReportFromControls(item.id);
+                        scheduleDraftAutosave();
+                    };
+                    element.addEventListener('input', updateDraft);
+                    element.addEventListener('change', updateDraft);
+                    element.addEventListener('blur', () => {
+                        if (syncParsedReportFromControls(item.id)) saveDraftNow();
+                    });
+                    element.dataset.autosaveBound = 'true';
+                });
+            });
+        }
+
+        function bindSingleEditAutosaveControls() {
+            if (singleEditAutosaveBound) return;
+            const ids = [
+                'edit-single-unit',
+                'edit-single-date',
+                'edit-single-type',
+                'edit-single-title',
+                'edit-single-lead',
+                'edit-single-content'
+            ];
+
+            ids.forEach((elementId) => {
+                const element = document.getElementById(elementId);
+                if (!element) return;
+                const updateReport = () => {
+                    if (syncSingleEditorToReport()) scheduleReportsAutosave();
+                };
+                element.addEventListener('input', updateReport);
+                element.addEventListener('change', updateReport);
+                element.addEventListener('blur', () => {
+                    if (syncSingleEditorToReport()) saveReportsNow();
+                });
+            });
+            singleEditAutosaveBound = true;
+        }
+
+        function flushAutosaveNow() {
+            syncActiveEditorsFromDom();
+            if (autosaveTimers.reports) saveReportsNow();
+            if (autosaveTimers.draft || parsedReportsCache.length > 0) saveDraftNow();
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') flushAutosaveNow();
+        });
+        window.addEventListener('pagehide', flushAutosaveNow);
+
+        function extractDate(text) {
+            const regex = /(\d{1,2})(?:\s*e\s*\d{1,2})?\s+de\s+([a-zA-ZçÇ]+)(?:\s+de\s+(\d{4}))?/;
+            const match = text.match(regex);
+            if (match) {
+                const day = match[1].padStart(2, '0');
+                const monthStr = match[2].toLowerCase();
+                const year = match[3] || new Date().getFullYear();
+                const months = {janeiro:'01', fevereiro:'02', março:'03', marco:'03', abril:'04', maio:'05', junho:'06', julho:'07', agosto:'08', setembro:'09', outubro:'10', novembro:'11', dezembro:'12'};
+                const month = months[monthStr] || '01';
+                return `${year}-${month}-${day}`;
+            }
+            return '';
+        }
+
+        function inferCategory(text) {
+            const t = text.toLowerCase();
+            if(t.includes('curso') || t.includes('turma') || t.includes('aprendizagem') || t.includes('docente') || t.includes('qualificação') || t.includes('formação')) return 'Educação e Qualificação';
+            if(t.includes('saúde') || t.includes('segurança') || t.includes('sipat') || t.includes('vacinação') || t.includes('nr') || t.includes('ergonomia')) return 'Saúde e Segurança';
+            if(t.includes('robótica') || t.includes('tecnologia') || t.includes('inovação') || t.includes('automação') || t.includes('ia') || t.includes('laboratório')) return 'Indústria 4.0 e Inovação';
+            if(t.includes('visita') || t.includes('reunião') || t.includes('parceria') || t.includes('prefeitura') || t.includes('associação') || t.includes('cerimônia')) return 'Relações Institucionais';
+            return 'Educação e Qualificação'; 
+        }
+
+        window.clearAllData = function() {
+            window.openConfirmModal(
+                "Apagar Todos os Dados",
+                "Deseja apagar todos os relatórios cadastrados no sistema? Esta ação limpará o seu histórico e não poderá ser desfeita.",
+                async () => {
+                    // Limpeza profunda na base de dados ilimitada
+                    await localforage.clear();
+                    
+                    // Limpeza do localStorage antigo por garantia
+                    localStorage.clear();
+                    
+                    reports = [];
+                    parsedReportsCache = [];
+                    applyFilters();
+                    
+                    // Atualiza a página para libertar memória RAM fantasma
+                    window.location.reload();
+                }
+            );
+        }
+
+        async function processWordFiles(event) {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+            document.getElementById('upload-feedback').innerText = "Processando e higienizando textos...";
+            parsedReportsCache = [];
+            for (let i = 0; i < files.length; i++) {
+                const arrayBuffer = await files[i].arrayBuffer();
+                const result = await mammoth.convertToHtml({arrayBuffer: arrayBuffer});
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = result.value;
+                let currentAction = null;
+                let rawAccumulatedContent = "";
+                const nodes = Array.from(tempDiv.childNodes);
+                
+                for (let node of nodes) {
+                    let rawText = node.textContent;
+                    let textUpper = rawText.toUpperCase();
+                    let isUnitHeader = rawText.length > 0 && rawText.length < 80 && (textUpper.includes('SESI') || textUpper.includes('SENAI') || textUpper.includes('FATEC'));
+                    
+                    if (isUnitHeader && node.tagName !== 'IMG' && !node.querySelector('img')) {
+                        if (currentAction && rawAccumulatedContent.length > 10) {
+                            parsedReportsCache.push(applyEditorialFieldsToReport(currentAction, rawAccumulatedContent));
+                        }
+                        currentAction = { id: 'rep_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5), unit: rawText.replace(/\*/g, '').trim(), title: '', lead: '', date: '', type: '', content: '', image: null, rawImage: null };
+                        rawAccumulatedContent = ""; 
+                    } else if (currentAction) {
+                        if (!currentAction.date && rawText.length > 5) { let extracted = extractDate(rawText); if(extracted) currentAction.date = extracted; }
+                        if (rawText.trim().length > 0) { rawAccumulatedContent += (rawAccumulatedContent ? '\n\n' : '') + rawText; }
+                        if (!currentAction.image && !currentAction.rawImage) { 
+                            const img = node.tagName === 'IMG' ? node : node.querySelector('img'); 
+                            if (img && img.src) currentAction.rawImage = img.src; 
+                        }
+                    }
+                }
+                if (currentAction && rawAccumulatedContent.length > 10) {
+                    parsedReportsCache.push(applyEditorialFieldsToReport(currentAction, rawAccumulatedContent));
+                }
+            }
+
+            ensureDistinctTitles(parsedReportsCache);
+            document.getElementById('upload-feedback').innerText = "Aplicando enquadramentos matemáticos...";
+            const imagePromises = parsedReportsCache.map(async (item) => {
+                if (item.rawImage) {
+                    const processed = await processImageForStorage(item.rawImage);
+                    item.originalImage = processed.original;
+                    item.image = processed.cropped;
+                    delete item.rawImage;
+                }
+            });
+            await Promise.all(imagePromises);
+
+            renderReviewCards();
+            await saveDraftNow({ alertOnError: true });
+        }
+
+        // --- TELA DE REVISÃO ---
+        function renderReviewCards() {
+            document.getElementById('stage-upload').classList.add('hidden');
+            document.getElementById('stage-review').classList.remove('hidden');
+            document.getElementById('review-count').innerText = parsedReportsCache.length;
+            const container = document.getElementById('parsed-cards-container');
+            container.innerHTML = '';
+            parsedReportsCache.forEach((item) => {
+                const card = document.createElement('div');
+                card.id = `parsed-card-${item.id}`;
+                card.className = 'bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex flex-col relative group font-sans';
+                const safeUnit = escapeHtml(item.unit);
+                const safeDate = escapeHtml(item.date);
+                const safeTitle = escapeHtml(item.title);
+                const safeLead = escapeHtml(item.lead);
+                const safeContent = escapeHtml(item.content);
+                const safeType = escapeHtml(item.type);
+                const safeImage = escapeHtml(item.image);
+                const imageAlt = escapeHtml(item.title || item.unit || 'Imagem importada da pauta');
+                
+                let imgThumb = item.image ? `<div class="w-full h-32 bg-gray-50 flex items-center justify-center rounded-lg mb-3 overflow-hidden relative">
+                    <img src="${safeImage}" alt="${imageAlt}" class="max-w-full max-h-full object-cover">
+                    <button onclick="openCropModal('${item.id}', true)" class="tap-target absolute top-2 left-2 bg-white text-brand-blue p-2 rounded-full hover:bg-brand-blue hover:text-white transition shadow-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:ring-offset-2" title="Ajustar Enquadramento Fotográfico" aria-label="Ajustar enquadramento da imagem"><i class="ph-bold ph-crop" aria-hidden="true"></i></button>
+                    </div>` : `<div class="w-full h-32 bg-gray-100 flex items-center justify-center rounded-lg mb-3" aria-label="Pauta sem imagem"><i class="ph ph-image text-4xl text-brand-gray" aria-hidden="true"></i></div>`;
+                
+                card.innerHTML = `
+                    <button onclick="removeParsedCard('${item.id}')" class="tap-target touch-reveal absolute top-2 right-2 bg-brand-danger-light text-brand-danger p-2 rounded-full hover:bg-red-100 transition opacity-100 sm:opacity-0 sm:group-hover:opacity-100 z-10 shadow-sm border border-red-200 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:ring-offset-2" title="Excluir desta importação" aria-label="Excluir pauta desta importação"><i class="ph-bold ph-trash" aria-hidden="true"></i></button>
+                    ${imgThumb}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
+                        <div><label for="edit-unit-${item.id}" class="text-[10px] font-bold text-brand-gray uppercase">Unidade</label><input type="text" value="${safeUnit}" id="edit-unit-${item.id}" class="touch-input w-full font-bold text-sm text-brand-blue border-b border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-blue bg-transparent uppercase"></div>
+                        <div><label for="edit-date-${item.id}" class="text-[10px] font-bold text-brand-gray uppercase">Data</label><input type="date" value="${safeDate}" id="edit-date-${item.id}" class="touch-input w-full text-xs border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-brand-blue font-bold text-brand-dark"></div>
+                    </div>
+                    <div class="mb-2"><label for="edit-title-${item.id}" class="flex justify-between text-[10px] font-bold text-brand-gray uppercase"><span>Manchete</span> <span id="count-title-${item.id}" aria-live="polite">${item.title.length}/${EDITORIAL_LIMITS.title}</span></label><textarea id="edit-title-${item.id}" maxlength="${EDITORIAL_LIMITS.title}" oninput="enforceEditorialLimit(this, 'title', 'count-title-${item.id}')" rows="2" class="touch-input w-full text-sm font-bold border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-brand-blue bg-gray-50 resize-none text-brand-dark" style="font-family: 'Montserrat', sans-serif;">${safeTitle}</textarea></div>
+                    <div class="mb-2"><label for="edit-lead-${item.id}" class="flex justify-between text-[10px] font-bold text-brand-gray uppercase"><span>Síntese (Lead)</span> <span id="count-lead-${item.id}" aria-live="polite">${item.lead.length}/${EDITORIAL_LIMITS.lead}</span></label><textarea id="edit-lead-${item.id}" maxlength="${EDITORIAL_LIMITS.lead}" oninput="enforceEditorialLimit(this, 'lead', 'count-lead-${item.id}')" rows="3" class="editorial-textarea touch-input w-full text-xs font-semibold text-brand-dark border border-red-200 rounded p-2 focus:outline-none focus:ring-2 focus:ring-brand-blue bg-red-50 resize-none" style="font-family: 'Montserrat', sans-serif;">${safeLead}</textarea></div>
+                    <div class="mb-2"><label for="edit-content-${item.id}" class="flex justify-between text-[10px] font-bold text-brand-gray uppercase"><span>Detalhes Institucionais</span> <span id="count-content-${item.id}" aria-live="polite">${item.content.length}/${EDITORIAL_LIMITS.content}</span></label><textarea id="edit-content-${item.id}" maxlength="${EDITORIAL_LIMITS.content}" oninput="enforceEditorialLimit(this, 'content', 'count-content-${item.id}')" rows="3" class="editorial-textarea touch-input w-full text-xs border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-brand-blue text-gray-700 leading-relaxed resize-none" style="font-family: 'Montserrat', sans-serif;">${safeContent}</textarea></div>
+                    <div><label for="edit-type-${item.id}" class="text-[10px] font-bold text-brand-gray uppercase">Eixo</label><select id="edit-type-${item.id}" class="touch-input w-full text-xs border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-brand-blue bg-brand-info-light text-brand-blue font-semibold"><option value="Educação e Qualificação" ${safeType === 'Educação e Qualificação' ? 'selected' : ''}>Educação e Qualificação</option><option value="Saúde e Segurança" ${safeType === 'Saúde e Segurança' ? 'selected' : ''}>Saúde e Segurança</option><option value="Indústria 4.0 e Inovação" ${safeType === 'Indústria 4.0 e Inovação' ? 'selected' : ''}>Indústria 4.0 e Inovação</option><option value="Relações Institucionais" ${safeType === 'Relações Institucionais' ? 'selected' : ''}>Relações Institucionais</option></select></div>
+                `;
+                container.appendChild(card);
+            });
+            bindReviewAutosaveControls();
+        }
+
+        window.removeParsedCard = async function(id) {
+            parsedReportsCache = parsedReportsCache.filter(item => item.id !== id);
+            const cardElement = document.getElementById(`parsed-card-${id}`);
+            if (cardElement) cardElement.remove();
+            document.getElementById('review-count').innerText = parsedReportsCache.length;
+            await saveDraftNow({ alertOnError: true });
+        }
+
+        window.saveAllParsedReports = async function(event) {
+            const btn = event ? event.currentTarget : document.querySelector('#stage-review button');
+            const originalText = btn.innerHTML; 
+            btn.innerHTML = "Salvando...";
+            btn.disabled = true;
+            syncAllParsedReportsFromControls();
+            
+            // Aplica edições feitas na tela
+            parsedReportsCache.forEach((item) => {
+                item.unit = document.getElementById(`edit-unit-${item.id}`).value; 
+                item.title = document.getElementById(`edit-title-${item.id}`).value;
+                item.lead = document.getElementById(`edit-lead-${item.id}`).value;
+                item.date = document.getElementById(`edit-date-${item.id}`).value; 
+                item.type = document.getElementById(`edit-type-${item.id}`).value; 
+                item.content = document.getElementById(`edit-content-${item.id}`).value;
+                Object.assign(item, normalizeReportForStorage(item));
+                
+                // OTIMIZAÇÃO CRÍTICA DE MEMÓRIA (Destrói imagem original antes de gravar)
+                delete item.originalImage; 
+            });
+            ensureDistinctTitles(parsedReportsCache);
+            
+            try { 
+                let newReportsData = [...reports, ...parsedReportsCache]; 
+                reports = newReportsData;
+                await saveReportsNow({ alertOnError: true, throwOnError: true });
+                parsedReportsCache = [];
+                await saveDraftNow({ alertOnError: true, throwOnError: true });
+                applyFilters(); 
+                closeModal(); 
+            } catch (e) { 
+                alert("⚠️ Erro crítico ao salvar.\nA base de dados do navegador não conseguiu processar os arquivos.");
+            } finally { 
+                btn.innerHTML = originalText; 
+                btn.disabled = false; 
+            }
+        }
+
+        window.openModal = function() {
+            document.getElementById('import-modal').classList.remove('hidden');
+            if (parsedReportsCache.length > 0) {
+                renderReviewCards();
+            } else {
+                document.getElementById('stage-upload').classList.remove('hidden');
+                document.getElementById('stage-review').classList.add('hidden');
+                document.getElementById('upload-feedback').innerText = "Selecionar arquivos Word (.docx)";
+            }
+        }
+        window.closeModal = function() {
+            syncAllParsedReportsFromControls();
+            if (parsedReportsCache.length > 0) saveDraftNow();
+            document.getElementById('import-modal').classList.add('hidden');
+            document.getElementById('word-upload').value = '';
+        }
+
+        // --- FUNÇÕES DE EDIÇÃO INDIVIDUAL E EXCLUSÃO (MAIN FEED) ---
+        window.editReport = function(id) {
+            const report = reports.find(r => r.id === id); if(!report) return;
+            document.getElementById('edit-single-id').value = report.id; 
+            document.getElementById('edit-single-unit').value = report.unit; 
+            document.getElementById('edit-single-type').value = report.type; 
+            document.getElementById('edit-single-date').value = report.date; 
+            
+            document.getElementById('edit-single-title').value = report.title; 
+            document.getElementById('count-title').innerText = report.title.length + `/${EDITORIAL_LIMITS.title}`;
+            
+            document.getElementById('edit-single-lead').value = report.lead || ''; 
+            document.getElementById('count-lead').innerText = (report.lead ? report.lead.length : 0) + `/${EDITORIAL_LIMITS.lead}`;
+            
+            document.getElementById('edit-single-content').value = report.content || '';
+            document.getElementById('count-content').innerText = (report.content ? report.content.length : 0) + `/${EDITORIAL_LIMITS.content}`;
+            
+            document.getElementById('edit-single-modal').classList.remove('hidden');
+            bindSingleEditAutosaveControls();
+        }
+        window.closeEditModal = function(options = {}) {
+            if (!options.skipAutosave && syncSingleEditorToReport()) saveReportsNow();
+            document.getElementById('edit-single-modal').classList.add('hidden');
+            applyFilters();
+        }
+        
+        window.saveEditedReport = async function() {
+            const id = document.getElementById('edit-single-id').value; const index = reports.findIndex(r => r.id === id); if(index === -1) return;
+            reports[index].unit = document.getElementById('edit-single-unit').value; 
+            reports[index].type = document.getElementById('edit-single-type').value; 
+            reports[index].date = document.getElementById('edit-single-date').value; 
+            
+            reports[index].title = document.getElementById('edit-single-title').value;
+            reports[index].lead = document.getElementById('edit-single-lead').value;
+            reports[index].content = document.getElementById('edit-single-content').value;
+            reports[index] = normalizeReportForStorage(reports[index]);
+            
+            try {
+                // Guarda de forma assíncrona no IndexedDB
+                await saveReportsNow({ throwOnError: true });
+            } catch (e) {
+                alert("⚠️ Erro ao salvar as alterações na base de dados local.");
+            }
+            closeEditModal({ skipAutosave: true });
+            applyFilters();
+        }
+        
+        window.deleteReport = function(id) { 
+            window.openConfirmModal(
+                "Apagar Matéria",
+                "Deseja apagar esta matéria definitivamente do sistema?",
+                async () => {
+                    reports = reports.filter(r => r.id !== id); 
+                    await saveReportsNow({ alertOnError: true });
+                    applyFilters(); 
+                }
+            );
+        }
+        
+        window.togglePdfInclusion = function(checkbox, cardId) { const card = document.getElementById(cardId); const overlay = document.getElementById(`overlay-${cardId}`); if(checkbox.checked) { card.classList.remove('exclude-from-pdf'); card.style.opacity = '1'; card.style.filter = 'none'; if(overlay) overlay.classList.add('hidden'); } else { card.classList.add('exclude-from-pdf'); card.style.opacity = '0.6'; card.style.filter = 'grayscale(100%)'; if(overlay) overlay.classList.remove('hidden'); } }
+
+        // --- LÓGICA BLINDADA DE FILTROS ---
+        window.applyFilters = function() {
+            const elUnit = document.getElementById('filter-unit-text'); const elType = document.getElementById('filter-type'); const elStartMonth = document.getElementById('filter-start-month'); const elEndMonth = document.getElementById('filter-end-month'); const elStartDate = document.getElementById('filter-start-date'); const elEndDate = document.getElementById('filter-end-date');
+            const unitText = elUnit?.value.toLowerCase() || ''; const type = elType?.value || 'all'; const startMonth = elStartMonth?.value || ''; const endMonth = elEndMonth?.value || ''; const startDate = elStartDate?.value || ''; const endDate = elEndDate?.value || '';
+            let filtered = reports;
+            if(unitText) filtered = filtered.filter(r => r.unit.toLowerCase().includes(unitText));
+            if(type !== 'all') filtered = filtered.filter(r => r.type === type);
+            if(startMonth || endMonth) { filtered = filtered.filter(r => { if(!r.date) return false; const rMonth = r.date.substring(0, 7); if(startMonth && rMonth < startMonth) return false; if(endMonth && rMonth > endMonth) return false; return true; }); }
+            if(startDate || endDate) { filtered = filtered.filter(r => { if(!r.date) return false; if(startDate && r.date < startDate) return false; if(endDate && r.date > endDate) return false; return true; }); }
+            let subtitle = []; if(unitText) subtitle.push(`Busca: ${unitText}`); if(type !== 'all') subtitle.push(type); if(startMonth && endMonth) subtitle.push(`Meses: ${startMonth.split('-').reverse().join('/')} a ${endMonth.split('-').reverse().join('/')}`); else if(startMonth) subtitle.push(`A partir do mês: ${startMonth.split('-').reverse().join('/')}`); else if(endMonth) subtitle.push(`Até o mês: ${endMonth.split('-').reverse().join('/')}`); if(startDate && endDate) subtitle.push(`De ${startDate.split('-').reverse().join('/')} até ${endDate.split('-').reverse().join('/')}`); else if(startDate) subtitle.push(`A partir de ${startDate.split('-').reverse().join('/')}`); else if(endDate) subtitle.push(`Até ${endDate.split('-').reverse().join('/')}`);
+            currentFilterSubtitle = subtitle.join(' • ');
+            const displayEl = document.getElementById('active-filters-display'); if(displayEl) { displayEl.innerText = currentFilterSubtitle ? `| Filtros Ativos: ${currentFilterSubtitle}` : ''; }
+            renderNewsFeed(filtered);
+        }
+
+        window.clearFilters = function() { if(document.getElementById('filter-unit-text')) document.getElementById('filter-unit-text').value = ''; if(document.getElementById('filter-type')) document.getElementById('filter-type').value = 'all'; if(document.getElementById('filter-start-month')) document.getElementById('filter-start-month').value = ''; if(document.getElementById('filter-end-month')) document.getElementById('filter-end-month').value = ''; if(document.getElementById('filter-start-date')) document.getElementById('filter-start-date').value = ''; if(document.getElementById('filter-end-date')) document.getElementById('filter-end-date').value = ''; applyFilters(); }
+
+        function formatReportDate(dateValue) {
+            if (!dateValue) return 'Data Indefinida';
+            const [y, m, d] = dateValue.split('-');
+            const dateObj = new Date(y, m - 1, d);
+            if (isNaN(dateObj)) return 'Data Indefinida';
+            return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }).format(dateObj);
+        }
+
+        function renderNewsFeed(data) {
+            const feed = document.getElementById('news-feed'); if(!feed) return; feed.innerHTML = '';
+            if(data.length === 0) { feed.innerHTML = '<p class="text-brand-gray text-center p-12 bg-white rounded-xl font-medium italic text-lg shadow-sm border border-gray-100">A mesa de redação não encontrou pautas para o filtro selecionado.</p>'; return; }
+            const sortedData = [...data].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            sortedData.forEach(rawItem => {
+                const item = normalizeReportForStorage(rawItem);
+                let formattedDate = formatReportDate(item.date);
+                const safeUnit = escapeHtml(item.unit);
+                const safeTitle = escapeHtml(item.title);
+                const safeType = escapeHtml(item.type);
+                const safeFormattedDate = escapeHtml(formattedDate);
+                const safeImage = escapeHtml(item.image);
+                const reportImageAlt = escapeHtml(item.title || item.unit || 'Imagem da matéria');
+                
+                let paragraphsHtml = '';
+                if (item.content) { 
+                    let paragraphs = item.content.split(/\n+/); 
+                    for(let i = 0; i < paragraphs.length; i++) { 
+                        if(paragraphs[i].trim().length > 0) { 
+                            paragraphsHtml += `<p class="editorial-text text-body mb-4 text-gray-800" style="font-family: 'Montserrat', sans-serif;">${escapeHtml(paragraphs[i].trim())}</p>`;
+                        } 
+                    } 
+                }
+                
+                const card = document.createElement('div'); card.id = `card-${item.id}`; 
+                
+                card.className = 'pdf-item bg-white mb-10 pt-4 relative font-sans';
+                
+                let imageHtml = item.image ? `<div class="w-full news-image-container drop-shadow-sm"><img src="${safeImage}" alt="${reportImageAlt}" class="news-image"></div>` : '';
+
+                card.innerHTML = `
+                    <div id="overlay-card-${item.id}" class="hidden absolute inset-0 bg-white bg-opacity-70 z-10 flex items-center justify-center pointer-events-none"><span class="bg-brand-danger text-white font-black px-6 py-2 rounded shadow-lg tracking-widest border border-red-900">OCULTADO DO PDF</span></div>
+                    <div class="report-toolbar hide-on-pdf bg-gray-50 border-b border-gray-200 px-4 sm:px-6 py-3 relative z-20 mb-6 rounded"><label for="include-pdf-${item.id}" class="tap-target justify-start flex items-center gap-2 cursor-pointer text-sm font-bold text-brand-blue select-none hover:text-blue-800 transition"><input id="include-pdf-${item.id}" type="checkbox" checked onchange="togglePdfInclusion(this, 'card-${item.id}')" class="touch-checkbox rounded text-brand-blue focus:ring-brand-blue cursor-pointer" aria-label="Incluir ${safeTitle || 'matéria'} no relatório em PDF"> Incluir no Relatório (PDF)</label><div class="report-actions"><button onclick="editReport('${item.id}')" class="tap-target text-brand-blue hover:text-blue-800 flex items-center gap-1 text-xs font-bold transition px-3 py-2 hover:bg-brand-info-light rounded border border-blue-200 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:ring-offset-2" title="Editar Matéria"><i class="ph-bold ph-pencil-simple text-lg" aria-hidden="true"></i> Editar</button><button onclick="deleteReport('${item.id}')" class="tap-target text-gray-600 hover:text-white hover:bg-brand-danger flex items-center gap-1 text-xs font-bold transition px-3 py-2 rounded border border-gray-300 hover:border-brand-danger focus:outline-none focus:ring-2 focus:ring-brand-blue focus:ring-offset-2" title="Excluir Permanentemente"><i class="ph-fill ph-trash text-lg" aria-hidden="true"></i> Apagar</button></div></div>
+                    
+                    <div class="pb-6">
+                        <div class="border-t border-brand-blue pt-4">
+                            <div class="mb-3"><span class="text-meta text-brand-blue font-black tracking-[0.2em] uppercase" style="font-family: 'Montserrat', sans-serif;">${safeUnit}</span></div>
+                            <h3 class="text-title font-bold text-brand-dark mb-4 leading-tight" style="font-family: 'Montserrat', sans-serif;">${safeTitle}</h3>
+                            <div class="text-meta mobile-meta flex items-center gap-6 mb-6 font-bold text-brand-gray uppercase tracking-wider" style="font-family: 'Montserrat', sans-serif;"><span class="flex items-center gap-1.5"><i class="ph-fill ph-calendar-blank text-brand-blue text-base" aria-hidden="true"></i> ${safeFormattedDate}</span><span class="flex items-center gap-1.5"><i class="ph-fill ph-tag text-brand-blue text-base" aria-hidden="true"></i> ${safeType}</span></div>
+                        </div>
+                        ${imageHtml}
+                        <div class="max-w-none">
+                            ${item.lead ? `<div class="editorial-text text-lead mb-5 text-brand-dark font-semibold border border-gray-200 bg-gray-50 py-3 px-4 rounded" style="font-family: 'Montserrat', sans-serif;">${escapeHtml(item.lead)}</div>` : ''}
+                            ${paragraphsHtml}
+                        </div>
+                    </div>
+                `;
+                feed.appendChild(card);
+            });
+        }
+
+        function loadBase64Image(url) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.crossOrigin = 'Anonymous';
+                img.onload = () => {
+                    try {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        canvas.getContext('2d').drawImage(img, 0, 0);
+                        resolve({ dataUrl: canvas.toDataURL('image/png'), width: img.width, height: img.height });
+                    } catch (e) {
+                        resolve(null);
+                    }
+                };
+                img.onerror = () => resolve(null);
+                img.src = url;
+            });
+        }
+
+        const PDF_LOGO_URL = "https://i.postimg.cc/HWKTMyKs/sistema-fieg-02.png";
+        const PDF_THEME = {
+            blue: [0, 58, 112],
+            dark: [43, 45, 66],
+            gray: [91, 102, 122],
+            border: [229, 231, 235],
+            light: [244, 246, 249],
+            leadBg: [249, 250, 251],
+            leadBorder: [229, 231, 235]
         };
 
-        // PÁGINA 1: DIMENSIONAMENTO DO PÚBLICO E MATRIZ
-        addHeaderAndFooter(doc, 1, 3);
-        doc.setFontSize(13); doc.setTextColor(0, 107, 137);
-        doc.text("1. Estrutura Operacional e Público-Alvo (47 Escolas)", 15, 42);
-
-        const bodyTabelaEscolas = [];
-        dadosSME.forEach(item => {
-            const totalAlunos = item.turmas * item.alunosPorTurma;
-            const kits = Math.ceil(item.alunosPorTurma / 6) * item.turmas;
-            bodyTabelaEscolas.push([item.segmento, item.ano, item.turmas, item.alunosPorTurma, totalAlunos, kits]);
-        });
-        bodyTabelaEscolas.push([
-            {content: 'TOTAIS CONSOLIDADOS', colSpan: 2, styles: {fontStyle: 'bold', fillColor: [240, 240, 240]}},
-            {content: document.getElementById('total-turmas').innerText, styles: {fontStyle: 'bold', fillColor: [240, 240, 240]}},
-            '',
-            {content: document.getElementById('total-alunos').innerText, styles: {fontStyle: 'bold', fillColor: [240, 240, 240]}},
-            {content: document.getElementById('total-kits').innerText, styles: {fontStyle: 'bold', fillColor: [240, 240, 240]}}
-        ]);
-
-        doc.autoTable({
-            startY: 48,
-            head: [['Segmento', 'Ano Letivo', 'Turmas', 'Alunos/Turma', 'Total Alunos', 'Kits Nec.']],
-            body: bodyTabelaEscolas,
-            theme: 'grid',
-            headStyles: { fillColor: [0, 107, 137] },
-            styles: { fontSize: 8.5 }
-        });
-
-        // PÁGINA 2: MATERIAL TECNOLÓGICO, DIDÁTICO E DOCÊNCIA
-        doc.addPage();
-        addHeaderAndFooter(doc, 2, 3);
-        doc.setFontSize(13); doc.setTextColor(0, 107, 137);
-        doc.text("2. Materiais, Tecnologia e Corpo Docente", 15, 42);
-
-        const modKits = document.querySelector('input[name="modalidade-kits"]:checked').value === 'aquisicao' ? 'Aquisição Direta' : 'Locação Tecnológica';
-        const bodyItens = [
-            ['Kits de Robótica Avançados', modKits, document.getElementById('total-kits').innerText, document.getElementById('subtotal-kits-vlr').innerText],
-            ['Livros Didáticos do Estudante', 'Consumível Anual', document.getElementById('total-alunos').innerText, document.getElementById('subtotal-livros-vlr').innerText],
-            ['Corpo de Docentes Especializados', `Jornada: ${document.getElementById('select-jornada-docente').value}h/sem`, document.getElementById('txt-headcount-professores').innerText, document.getElementById('subtotal-professores-vlr').innerText],
-            ['Formação Inicial de Professores', 'Capacitação SESI', document.getElementById('txt-headcount-professores').innerText, document.getElementById('subtotal-formacao-vlr').innerText],
-            ['Assessoria Pedagógica Mensal', 'Serviço de Monitoramento', '47 Escolas', document.getElementById('subtotal-assessoria-vlr').innerText]
-        ];
-
-        doc.autoTable({
-            startY: 48,
-            head: [['Categoria do Item', 'Modalidade / Referência', 'Quantidade', 'Subtotal (Anual)']],
-            body: bodyItens,
-            theme: 'grid',
-            headStyles: { fillColor: [71, 85, 105] },
-            styles: { fontSize: 8.5 }
-        });
-
-        // PÁGINA 3: CRONOGRAMA DE DESEMBOLSO
-        doc.addPage();
-        addHeaderAndFooter(doc, 3, 3);
-        doc.setFontSize(13); doc.setTextColor(0, 107, 137);
-        doc.text("3. Cronograma Financeiro de Desembolso", 15, 42);
-
-        const parcelasTot = document.getElementById('select-parcelas').value;
-        const valorParcela = document.getElementById('valor-cada-parcela').innerText;
-        const totalFinal = document.getElementById('total-geral-proposta').innerText;
-
-        const bodyConsol = [
-            ['Investimento Total da Parceria', totalFinal],
-            ['Plano de Parcelamento Escolhido', `${parcelasTot}x Mensais`],
-            ['Valor do Faturamento Mensal', valorParcela]
-        ];
-
-        doc.autoTable({
-            startY: 48,
-            head: [['Descrição Comercial', 'Valor / Condição']],
-            body: bodyConsol,
-            theme: 'grid',
-            headStyles: { fillColor: [30, 41, 59] },
-            styles: { fontSize: 10 }
-        });
-
-        doc.save(`Proposta_SME_Goiania_Robotica_47Escolas.pdf`);
-    }
-
-    // Inicialização e Eventos
-    window.onload = () => {
-        initParcelas();
-        setupMatriz();
-        calcular();
-
-        // Delegação de Eventos para Inputs Dinâmicos
-        document.addEventListener('input', (e) => {
-            if(e.target.matches('input') || e.target.matches('select')) {
-                calcular();
-            }
-        });
-
-        document.addEventListener('change', (e) => {
-            if(e.target.matches('input[type="radio"]') || e.target.matches('select')) {
-                calcular();
-            }
-        });
-
-        const btnPdf = document.getElementById('btn-gerar-pdf-completo');
-        if(btnPdf) {
-            btnPdf.onclick = () => gerarPDF();
+        function getPdfLibrary() {
+            return window.jspdf?.jsPDF || window.jsPDF || null;
         }
-    };
-</script>
+
+        function setPdfTextColor(pdf, color) {
+            pdf.setTextColor(color[0], color[1], color[2]);
+        }
+
+        function setPdfDrawColor(pdf, color) {
+            pdf.setDrawColor(color[0], color[1], color[2]);
+        }
+
+        function setPdfFillColor(pdf, color) {
+            pdf.setFillColor(color[0], color[1], color[2]);
+        }
+
+        function normalizePdfText(value) {
+            return String(value ?? '').replace(/[ \t\r\f\v]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+        }
+
+        function getDataUrlImageFormat(dataUrl) {
+            if (/^data:image\/png/i.test(dataUrl)) return 'PNG';
+            if (/^data:image\/webp/i.test(dataUrl)) return 'WEBP';
+            return 'JPEG';
+        }
+
+        function getReportsSelectedForPdf() {
+            const cards = Array.from(document.querySelectorAll('#news-feed .pdf-item:not(.exclude-from-pdf)'));
+            const reportsById = new Map(reports.map(report => [report.id, report]));
+            return cards
+                .map(card => reportsById.get(card.id.replace(/^card-/, '')))
+                .filter(Boolean)
+                .map(normalizeReportForStorage);
+        }
+
+        function drawPdfChrome(pdf, logo) {
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const totalPages = pdf.internal.getNumberOfPages();
+
+            for (let pageNumber = 1; pageNumber <= totalPages; pageNumber++) {
+                pdf.setPage(pageNumber);
+                setPdfDrawColor(pdf, PDF_THEME.blue);
+                pdf.setLineWidth(0.3);
+                pdf.line(15, 25, pageWidth - 15, 25);
+
+                if (logo) {
+                    const imgWidth = 24;
+                    const imgHeight = (logo.height * imgWidth) / logo.width;
+                    pdf.addImage(logo.dataUrl, 'PNG', pageWidth - 15 - imgWidth, 8, imgWidth, imgHeight);
+                }
+
+                pdf.setFont('helvetica', 'normal');
+                pdf.setFontSize(8);
+                setPdfTextColor(pdf, PDF_THEME.gray);
+                pdf.text(`Informe Executivo Institucional Sistema FIEG - Pág. ${pageNumber} de ${totalPages}`, 15, pageHeight - 10);
+            }
+        }
+
+        async function buildOfficialPdf(selectedReports) {
+            const PdfClass = getPdfLibrary();
+            if (!PdfClass) {
+                throw new Error('A biblioteca de PDF não foi carregada.');
+            }
+
+            const pdf = new PdfClass({ unit: 'mm', format: 'a4', orientation: 'portrait', compress: true });
+            const logo = await loadBase64Image(PDF_LOGO_URL);
+            const page = {
+                width: pdf.internal.pageSize.getWidth(),
+                height: pdf.internal.pageSize.getHeight(),
+                marginX: 16,
+                top: 36,
+                bottom: 24,
+                contentWidth: 178
+            };
+
+            function writeLines(lines, x, y, lineHeight, options = {}) {
+                lines.forEach((line) => {
+                    pdf.text(line, x, y, options);
+                    y += lineHeight;
+                });
+                return y;
+            }
+
+            function writeJustifiedLine(line, x, y, width) {
+                const value = normalizePdfText(line);
+                const words = value.split(/\s+/).filter(Boolean);
+                if (words.length < 2) {
+                    pdf.text(value, x, y);
+                    return;
+                }
+
+                const wordsWidth = words.reduce((total, word) => total + pdf.getTextWidth(word), 0);
+                const gapWidth = (width - wordsWidth) / (words.length - 1);
+                if (!Number.isFinite(gapWidth) || gapWidth <= 0) {
+                    pdf.text(value, x, y);
+                    return;
+                }
+
+                let cursorX = x;
+                words.forEach((word, index) => {
+                    pdf.text(word, cursorX, y);
+                    if (index < words.length - 1) {
+                        cursorX += pdf.getTextWidth(word) + gapWidth;
+                    }
+                });
+            }
+
+            function writeEditorialLines(lines, x, y, lineHeight, width) {
+                lines.forEach((line, index) => {
+                    const isLastLine = index === lines.length - 1;
+                    if (isLastLine) {
+                        pdf.text(normalizePdfText(line), x, y);
+                    } else {
+                        writeJustifiedLine(line, x, y, width);
+                    }
+                    y += lineHeight;
+                });
+                return y;
+            }
+
+            function renderReport(report, reportIndex) {
+                if (reportIndex > 1) {
+                    pdf.addPage();
+                }
+                let y = page.top;
+                const title = normalizePdfText(semanticTrim(report.title || 'Matéria sem título', EDITORIAL_LIMITS.title, true));
+                const unit = normalizePdfText(report.unit || 'Unidade não informada').toUpperCase();
+                const date = formatReportDate(report.date);
+                const type = normalizePdfText(report.type || 'Eixo não informado');
+
+                function addContinuationPage() {
+                    pdf.addPage();
+                    y = page.top;
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.setFontSize(8);
+                    setPdfTextColor(pdf, PDF_THEME.gray);
+                    const continuationTitle = pdf.splitTextToSize(`${title} | continuação`, page.contentWidth);
+                    y = writeLines(continuationTitle, page.marginX, y, 4.2);
+                    y += 6;
+                }
+
+                function ensureSpace(requiredHeight) {
+                    if (y + requiredHeight > page.height - page.bottom) {
+                        addContinuationPage();
+                    }
+                }
+
+                pdf.setFont('helvetica', 'bold');
+                pdf.setFontSize(8);
+                setPdfTextColor(pdf, PDF_THEME.blue);
+                const unitLines = pdf.splitTextToSize(unit, page.contentWidth);
+                y = writeLines(unitLines, page.marginX, y, 4.2);
+                y += 3;
+
+                pdf.setFont('helvetica', 'bold');
+                pdf.setFontSize(16);
+                setPdfTextColor(pdf, PDF_THEME.dark);
+                const titleLines = pdf.splitTextToSize(title, page.contentWidth);
+                ensureSpace(titleLines.length * 7 + 15);
+                y = writeLines(titleLines, page.marginX, y, 7);
+                y += 5;
+
+                pdf.setFont('helvetica', 'bold');
+                pdf.setFontSize(8.5);
+                setPdfTextColor(pdf, PDF_THEME.gray);
+                const metaLines = pdf.splitTextToSize(`${date}  |  ${type}`, page.contentWidth);
+                y = writeLines(metaLines, page.marginX, y, 4.5);
+                y += 8;
+
+                if (report.image) {
+                    const imageHeight = page.contentWidth / 2;
+                    ensureSpace(imageHeight + 10);
+                    try {
+                        pdf.addImage(report.image, getDataUrlImageFormat(report.image), page.marginX, y, page.contentWidth, imageHeight, undefined, 'FAST');
+                    } catch (e) {
+                        setPdfFillColor(pdf, PDF_THEME.light);
+                        setPdfDrawColor(pdf, PDF_THEME.border);
+                        pdf.rect(page.marginX, y, page.contentWidth, imageHeight, 'FD');
+                        pdf.setFont('helvetica', 'bold');
+                        pdf.setFontSize(9);
+                        setPdfTextColor(pdf, PDF_THEME.gray);
+                        pdf.text('Imagem indisponível para exportação', page.marginX + 6, y + 12);
+                    }
+                    y += imageHeight + 10;
+                }
+
+                const lead = normalizePdfText(semanticTrim(report.lead, EDITORIAL_LIMITS.lead, true));
+                if (lead) {
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.setFontSize(11);
+                    const leadLines = pdf.splitTextToSize(lead, page.contentWidth - 10);
+                    const boxHeight = Math.max(20, leadLines.length * 5.5 + 10);
+                    ensureSpace(boxHeight + 7);
+                    setPdfFillColor(pdf, PDF_THEME.leadBg);
+                    setPdfDrawColor(pdf, PDF_THEME.leadBorder);
+                    pdf.roundedRect(page.marginX, y, page.contentWidth, boxHeight, 2, 2, 'FD');
+                    setPdfTextColor(pdf, PDF_THEME.dark);
+                    writeEditorialLines(leadLines, page.marginX + 5, y + 8, 5.5, page.contentWidth - 10);
+                    y += boxHeight + 8;
+                }
+
+                const paragraphs = String(semanticTrim(report.content || '', EDITORIAL_LIMITS.content, true))
+                    .split(/\n+/)
+                    .map(normalizePdfText)
+                    .filter(Boolean);
+
+                pdf.setFont('helvetica', 'normal');
+                pdf.setFontSize(10.5);
+                setPdfTextColor(pdf, [31, 41, 55]);
+
+                if (paragraphs.length === 0) {
+                    ensureSpace(8);
+                    pdf.setFont('helvetica', 'italic');
+                    setPdfTextColor(pdf, PDF_THEME.gray);
+                    pdf.text('Sem corpo institucional informado.', page.marginX, y);
+                    return;
+                }
+
+                paragraphs.forEach((paragraph) => {
+                    pdf.setFont('helvetica', 'normal');
+                    pdf.setFontSize(10.5);
+                    setPdfTextColor(pdf, [31, 41, 55]);
+                    const bodyLines = pdf.splitTextToSize(paragraph, page.contentWidth);
+                    bodyLines.forEach((line, lineIndex) => {
+                        ensureSpace(5.7);
+                        if (lineIndex === bodyLines.length - 1) {
+                            pdf.text(normalizePdfText(line), page.marginX, y);
+                        } else {
+                            writeJustifiedLine(line, page.marginX, y, page.contentWidth);
+                        }
+                        y += 5.7;
+                    });
+                    y += 3.5;
+                });
+
+                pdf.setFont('helvetica', 'bold');
+                pdf.setFontSize(7.5);
+                setPdfTextColor(pdf, PDF_THEME.gray);
+                pdf.text(`Pauta ${reportIndex} de ${selectedReports.length}`, page.marginX, page.height - 16);
+            }
+
+            selectedReports.forEach((report, index) => renderReport(report, index + 1));
+            drawPdfChrome(pdf, logo);
+            return pdf;
+        }
+
+        window.exportToPDF = async function() {
+            const btn = document.getElementById('btn-export');
+            const loadingOverlay = document.getElementById('pdf-loading');
+            const loadingText = document.getElementById('pdf-loading-text');
+            const originalText = btn.innerHTML;
+            const selectedReports = getReportsSelectedForPdf();
+
+            if (selectedReports.length === 0) {
+                alert("Nenhuma pauta selecionada para o PDF. Revise os filtros ou marque pelo menos uma matéria para inclusão.");
+                return;
+            }
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="ph ph-file-pdf text-xl" aria-hidden="true"></i> Gerando PDF...';
+                loadingText.innerText = `Compondo ${selectedReports.length} pauta${selectedReports.length > 1 ? 's' : ''} com paginação oficial.`;
+                loadingOverlay.classList.remove('hidden');
+                loadingOverlay.classList.add('flex');
+                loadingOverlay.setAttribute('aria-hidden', 'false');
+
+                const pdf = await buildOfficialPdf(selectedReports);
+                pdf.save(`Informe_Executivo_FIEG_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`);
+            } catch (e) {
+                console.error(e);
+                alert("Houve um erro ao processar o PDF. Recarregue a página e tente novamente.");
+            } finally {
+                loadingOverlay.classList.add('hidden');
+                loadingOverlay.classList.remove('flex');
+                loadingOverlay.setAttribute('aria-hidden', 'true');
+                loadingText.innerText = 'Preparando pautas, imagens e paginação.';
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+    </script>
 </body>
 </html>

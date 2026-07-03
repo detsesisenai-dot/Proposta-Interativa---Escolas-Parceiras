@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proposta Robótica Educacional - SME Goiânia</title>
+    <script src="https://cdn-tailwindcss.vercel.app/"></script>
+    <!-- jsPDF Core -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- jsPDF AutoTable Plugin -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .card-base { @apply bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8; }
+        .input-inline-table { @apply w-16 text-center bg-slate-50 border border-slate-200 rounded px-1.5 py-1 text-xs font-semibold text-slate-700 focus:bg-white focus:border-cyan-500 focus:outline-none transition-all; }
+        .input-param { @apply w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm font-semibold text-slate-700 focus:bg-white focus:border-cyan-500 focus:outline-none transition-all; }
+        
+        /* Régua de margem */
+        .regua-valor-lucro { @apply w-full h-8 flex rounded-full overflow-hidden border border-slate-200 bg-slate-100 mt-2; }
+        .regua-custo { @apply bg-slate-500 h-full flex items-center justify-center text-white text-xs font-bold transition-all duration-500; }
+        .regua-lucro { @apply bg-cyan-600 h-full flex items-center justify-center text-white text-xs font-bold transition-all duration-500; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto space-y-8 mb-16">
+
+        <!-- CABEÇALHO -->
+        <header class="card-base relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-cyan-600 via-indigo-600 to-blue-600"></div>
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+                <div class="flex items-center gap-6">
+                    <img id="logo-pdf" src="https://i.postimg.cc/8CXccsTc/sseducacao.png" alt="Logomarca Seduc-GO" class="h-16 w-auto object-contain">
+                    <div class="border-l-2 border-slate-200 pl-6 hidden md:block text-left">
+                        <h1 class="text-2xl font-black text-slate-800 tracking-tight">Proposta de Parceria Robótica Educacional</h1>
+                        <h2 class="text-sm font-semibold text-cyan-700 uppercase tracking-wide">Secretaria Municipal de Educação de Goiânia</h2>
+                    </div>
+                </div>
+                <div class="bg-slate-50 px-6 py-3 rounded-xl border border-slate-100 shadow-sm text-center md:text-right w-full md:w-auto">
+                    <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Implantação Piloto</span>
+                    <p class="text-sm font-extrabold text-slate-700">47 Escolas SME-GYN | 410 Turmas | 12 Meses</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- BLOCO 1: DIMENSIONAMENTO DO PÚBLICO-ALVO -->
+        <section class="card-base">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-slate-100 pb-4">
+                <div class="flex items-center gap-3">
+                    <div class="bg-cyan-600 w-1.5 h-6 rounded-full"></div>
+                    <h3 class="text-xl font-bold text-slate-800">Bloco 1: Público-Alvo e Matriz de Demanda</h3>
+                </div>
+                <span class="text-xs text-slate-400 bg-slate-50 px-2.5 py-1 rounded-md border italic">*Base atualizada pela planilha Mapa de Turmas2.xlsx. Turmas e média de matrícula por turma seguem editáveis.</span>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Tabela de Turmas e Alunos -->
+                <div class="lg:col-span-8 overflow-x-auto rounded-xl border border-slate-100">
+                    <table class="min-w-full text-sm text-left">
+                        <thead class="bg-slate-50 text-slate-600 text-[10px] uppercase font-bold border-b border-slate-100">
+                            <tr>
+                                <th class="py-3 px-4">Segmento</th>
+                                <th class="py-3 px-4">Ano Letivo</th>
+                                <th class="py-3 px-4 text-center">Turmas</th>
+                                <th class="py-3 px-4 text-center">Matrícula/Turma</th>
+                                <th class="py-3 px-4 text-right">Matrícula Est.</th>
+                                <th class="py-3 px-4 text-right">Maletas Ref.</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-estudantes" class="divide-y divide-slate-100 font-medium text-slate-700">
+                            <!-- Preenchido via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Painel Lateral de Totais -->
+                <div class="lg:col-span-4 space-y-4">
+                    <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-4 shadow-inner">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Resumo Geral do Público</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-white border p-3.5 rounded-xl text-center shadow-sm">
+                                <span class="text-[10px] text-slate-400 block uppercase">Escolas</span>
+                                <span id="total-escolas" class="text-2xl font-black text-cyan-700">47</span>
+                            </div>
+                            <div class="bg-white border p-3.5 rounded-xl text-center shadow-sm">
+                                <span class="text-[10px] text-slate-400 block uppercase">Total Turmas</span>
+                                <span id="total-turmas" class="text-2xl font-black text-cyan-700">410</span>
+                            </div>
+                            <div class="bg-white border p-4 rounded-xl text-center shadow-sm col-span-2">
+                                <span class="text-[10px] text-slate-400 block uppercase mb-0.5">Matrículas Informadas</span>
+                                <span id="total-alunos" class="text-3xl font-black text-cyan-800">10.378</span>
+                            </div>
+                            <div class="bg-white border p-3.5 rounded-xl text-center shadow-sm">
+                                <span class="text-[10px] text-slate-400 block uppercase">Capacidade</span>
+                                <span id="total-capacidade" class="text-2xl font-black text-cyan-700">10.795</span>
+                            </div>
+                            <div class="bg-white border p-3.5 rounded-xl text-center shadow-sm">
+                                <span class="text-[10px] text-slate-400 block uppercase">Vagas</span>
+                                <span id="total-vagas" class="text-2xl font-black text-cyan-700">417</span>
+                            </div>
+                            <div class="bg-cyan-600 text-white p-4 rounded-xl text-center shadow-sm col-span-2">
+                                <span class="text-[10px] opacity-80 block uppercase mb-0.5">Total de Maletas/Kits</span>
+                                <span id="total-kits" class="text-3xl font-black">461</span>
+                                <span class="text-[8px] opacity-75 block mt-1 uppercase">(Distribuição por faixa escolar da planilha)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- BLOCO COMPLEMENTAR: ESCOLAS VINCULADAS -->
+        <section class="card-base">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-slate-100 pb-4">
+                <div class="flex items-center gap-3">
+                    <div class="bg-cyan-600 w-1.5 h-6 rounded-full"></div>
+                    <h3 class="text-xl font-bold text-slate-800">Mapa de Escolas Vinculadas à SME-GYN</h3>
+                </div>
+                <div class="w-full md:w-80">
+                    <input id="filtro-escolas" type="search" placeholder="Filtrar escola" class="input-param">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center">
+                    <span class="text-[10px] text-slate-400 block uppercase">Capacidade</span>
+                    <span class="text-2xl font-black text-slate-800">10.795</span>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center">
+                    <span class="text-[10px] text-slate-400 block uppercase">Matrículas</span>
+                    <span class="text-2xl font-black text-slate-800">10.378</span>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center">
+                    <span class="text-[10px] text-slate-400 block uppercase">Ocupação Média</span>
+                    <span class="text-2xl font-black text-slate-800">96,1%</span>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center">
+                    <span class="text-[10px] text-slate-400 block uppercase">Escolas na Busca</span>
+                    <span id="contador-escolas" class="text-2xl font-black text-slate-800">47 de 47</span>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto rounded-xl border border-slate-100 max-h-[520px] custom-scrollbar">
+                <table class="min-w-full text-xs text-left">
+                    <thead class="bg-slate-50 text-slate-600 text-[10px] uppercase font-bold border-b border-slate-100 sticky top-0 z-10">
+                        <tr>
+                            <th class="py-3 px-4">Escola</th>
+                            <th class="py-3 px-4 text-center">Turmas</th>
+                            <th class="py-3 px-4 text-right">Matrícula</th>
+                            <th class="py-3 px-4 text-right">Capacidade</th>
+                            <th class="py-3 px-4 text-right">Ocupação</th>
+                            <th class="py-3 px-4 text-right">Maletas</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-escolas" class="divide-y divide-slate-100 font-medium text-slate-700">
+                        <!-- Preenchido via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- BLOCO 2: MATERIAL TECNOLÓGICO E DIDÁTICO (CAPEX) -->
+        <section class="card-base">
+            <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                <div class="bg-cyan-600 w-1.5 h-6 rounded-full"></div>
+                <h3 class="text-xl font-bold text-slate-800">Bloco 2: Tecnologia e Materiais de Apoio</h3>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Kits de Robótica Avançados -->
+                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200/60 space-y-4">
+                    <div class="flex items-center justify-between border-b pb-2">
+                        <h4 class="font-bold text-slate-800 text-sm">1. Maletas/Kits de Robótica por Faixa</h4>
+                        <span class="text-xs font-bold text-cyan-700 bg-cyan-50 px-2 py-0.5 rounded border border-cyan-100 uppercase">Editável</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">1º ao 3º ano</label>
+                            <div class="flex items-center">
+                                <span class="text-slate-400 mr-1 font-bold">R$</span>
+                                <input type="number" id="input-kit-13" value="5500.00" class="input-param">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">4º e 5º anos</label>
+                            <div class="flex items-center">
+                                <span class="text-slate-400 mr-1 font-bold">R$</span>
+                                <input type="number" id="input-kit-45" value="6800.00" class="input-param">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">6º ao 9º ano</label>
+                            <div class="flex items-center">
+                                <span class="text-slate-400 mr-1 font-bold">R$</span>
+                                <input type="number" id="input-kit-69" value="8500.00" class="input-param">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2 text-center">
+                        <div class="bg-white border border-slate-200 rounded-xl p-3">
+                            <span class="text-[9px] text-slate-400 block uppercase">1º-3º</span>
+                            <span id="txt-total-maleta-13" class="text-lg font-black text-slate-800">230</span>
+                        </div>
+                        <div class="bg-white border border-slate-200 rounded-xl p-3">
+                            <span class="text-[9px] text-slate-400 block uppercase">4º-5º</span>
+                            <span id="txt-total-maleta-45" class="text-lg font-black text-slate-800">225</span>
+                        </div>
+                        <div class="bg-white border border-slate-200 rounded-xl p-3">
+                            <span class="text-[9px] text-slate-400 block uppercase">6º-9º</span>
+                            <span id="txt-total-maleta-69" class="text-lg font-black text-slate-800">6</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 pt-2">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase block">Modalidade de Contratação dos Kits</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="flex items-center justify-between bg-white border border-slate-200 p-3 rounded-xl cursor-pointer hover:bg-slate-50 transition-all">
+                                <div class="flex items-center gap-2">
+                                    <input type="radio" name="modalidade-kits" value="aquisicao" class="text-cyan-600 focus:ring-cyan-500 h-4 w-4" checked>
+                                    <span class="text-xs font-semibold text-slate-700">Aquisição Direta</span>
+                                </div>
+                            </label>
+                            <label class="flex items-center justify-between bg-white border border-slate-200 p-3 rounded-xl cursor-pointer hover:bg-slate-50 transition-all">
+                                <div class="flex items-center gap-2">
+                                    <input type="radio" name="modalidade-kits" value="locacao" class="text-cyan-600 focus:ring-cyan-500 h-4 w-4">
+                                    <span class="text-xs font-semibold text-slate-700">Locação Tecnológica</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Custo de Locação Unitária</label>
+                        <div class="flex items-center">
+                            <span class="text-slate-400 mr-1 font-bold">R$</span>
+                            <input type="number" id="input-kit-locacao" value="1350.00" class="input-param">
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 flex justify-between items-center shadow-sm">
+                        <span class="text-xs font-bold text-slate-500 uppercase">Subtotal Maletas/Kits (<span class="display-qtd-kits">0</span> unid)</span>
+                        <span id="subtotal-kits-vlr" class="text-lg font-black text-slate-800">R$ 0,00</span>
+                    </div>
+                </div>
+
+                <!-- Livros Didáticos -->
+                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200/60 space-y-4 flex flex-col justify-between">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between border-b pb-2">
+                            <h4 class="font-bold text-slate-800 text-sm">2. Materiais Didáticos (Livros do Estudante)</h4>
+                            <span class="text-xs font-bold text-cyan-700 bg-cyan-50 px-2 py-0.5 rounded border border-cyan-100 uppercase">Editável</span>
+                        </div>
+
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Custo do Livro por Estudante</label>
+                            <div class="flex items-center">
+                                <span class="text-slate-400 mr-1 font-bold">R$</span>
+                                <input type="number" id="input-livro-unitario" value="180.00" class="input-param">
+                            </div>
+                        </div>
+                        <p class="text-[10px] text-slate-400 italic leading-relaxed">
+                            *Cada estudante selecionado receberá o livro didático completo adequado à sua série letiva do Ensino Fundamental.
+                        </p>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 flex justify-between items-center shadow-sm mt-4">
+                        <span class="text-xs font-bold text-slate-500 uppercase">Subtotal Material Didático</span>
+                        <span id="subtotal-livros-vlr" class="text-lg font-black text-slate-800">R$ 0,00</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- BLOCO 3: PROFESSORES E ATENDIMENTO SEMANAL -->
+        <section class="card-base">
+            <div class="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
+                <div class="flex items-center gap-3">
+                    <div class="bg-cyan-600 w-1.5 h-6 rounded-full"></div>
+                    <h3 class="text-xl font-bold text-slate-800">Bloco 3: Dimensionamento de Professores</h3>
+                </div>
+                <span class="text-xs font-bold text-cyan-700 bg-cyan-50 px-2.5 py-1 rounded border border-cyan-100 uppercase">Editável</span>
+            </div>
+
+            <!-- Parâmetros de Trabalho do Professor -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 text-center">
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <label class="text-[10px] font-bold text-slate-500 block uppercase mb-2">Carga Horária Contratual</label>
+                    <select id="select-jornada-docente" class="w-full bg-white border rounded-lg p-2 font-bold text-slate-700 text-sm focus:outline-none focus:ring-1 focus:ring-cyan-500">
+                        <option value="40" selected>Jornada Completa (40h/sem)</option>
+                        <option value="30">Jornada Média (30h/sem)</option>
+                        <option value="20">Jornada Parcial (20h/sem)</option>
+                    </select>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <label class="text-[10px] font-bold text-slate-500 block uppercase mb-2">Hora-Atividade / Planejamento</label>
+                    <select id="select-hora-atividade" class="w-full bg-white border rounded-lg p-2 font-bold text-slate-700 text-sm focus:outline-none focus:ring-1 focus:ring-cyan-500">
+                        <option value="33.33" selected>1/3 da Jornada (33%)</option>
+                        <option value="0">Sem Hora-Atividade (0%)</option>
+                    </select>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <label class="text-[10px] font-bold text-slate-500 block uppercase mb-1">Salário-Base Mensal</label>
+                    <div class="flex items-center justify-center">
+                        <span class="text-xs text-slate-400 mr-1">R$</span>
+                        <input type="number" id="input-salario-docente" value="5500.00" class="input-param text-center font-bold">
+                    </div>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <label class="text-[10px] font-bold text-slate-500 block uppercase mb-1">Encargos Trabalhistas (%)</label>
+                    <div class="flex items-center justify-center">
+                        <input type="number" id="input-encargos-docente" value="80" class="input-param text-center font-bold">
+                        <span class="text-xs text-slate-400 ml-1">%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Memória de Dimensionamento Pedagógico -->
+            <div class="bg-slate-50 border rounded-2xl p-6 grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
+                <div class="space-y-1">
+                    <span class="text-[10px] font-bold text-slate-400 block uppercase">Atendimento por Turma</span>
+                    <span class="text-xl font-bold text-slate-800">120 minutos (2h/sem)</span>
+                </div>
+                <div class="space-y-1 border-t md:border-t-0 md:border-l border-slate-200 pt-4 md:pt-0">
+                    <span class="text-[10px] font-bold text-slate-400 block uppercase">Regência Efetiva / Professor</span>
+                    <span id="txt-regencia-por-prof" class="text-xl font-bold text-slate-800">26.7 horas / semana</span>
+                </div>
+                <div class="space-y-1 border-t md:border-t-0 md:border-l border-slate-200 pt-4 md:pt-0">
+                    <span class="text-[10px] font-bold text-cyan-600 block uppercase">Professores Necessários</span>
+                    <span id="txt-headcount-professores" class="text-2xl font-black text-cyan-700">0 Profs</span>
+                    <span class="text-[9px] text-slate-400 block font-medium">para cobrir <span id="txt-total-horas-demanda">0</span> horas/semana</span>
+                </div>
+                <div class="bg-white rounded-xl border border-slate-200 p-4 flex flex-col justify-center">
+                    <span class="text-[10px] font-bold text-slate-400 block uppercase">Total Professores (12 Meses)</span>
+                    <span id="subtotal-professores-vlr" class="text-xl font-black text-slate-800">R$ 0,00</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- BLOCO 4: FORMAÇÃO E ASSESSORIA -->
+        <section class="card-base">
+            <div class="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
+                <div class="flex items-center gap-3">
+                    <div class="bg-cyan-600 w-1.5 h-6 rounded-full"></div>
+                    <h3 class="text-xl font-bold text-slate-800">Bloco 4: Capacitação & Assessoria Pedagógica</h3>
+                </div>
+                <span class="text-xs font-bold text-cyan-700 bg-cyan-50 px-2.5 py-1 rounded border border-cyan-100 uppercase">Editável</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Formação Inicial de Professores -->
+                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200/60 space-y-4">
+                    <div class="flex items-center justify-between border-b pb-2">
+                        <h4 class="font-bold text-slate-800 text-sm">3. Formação Inicial Docente</h4>
+                        <span class="text-xs text-slate-400">Pacote único por professor</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Custo por Professor</label>
+                            <div class="flex items-center">
+                                <span class="text-slate-400 mr-1 font-bold">R$</span>
+                                <input type="number" id="input-formacao-prof" value="1800.00" class="input-param">
+                            </div>
+                        </div>
+                        <div class="text-center flex flex-col justify-center bg-white rounded-xl border p-2">
+                            <span class="text-[9px] font-bold text-slate-400 block uppercase">Total Dimensionado</span>
+                            <span id="txt-formacao-profs" class="text-sm font-bold text-slate-700">0 Profs</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 flex justify-between items-center shadow-sm">
+                        <span class="text-xs font-bold text-slate-500 uppercase font-bold">Subtotal Formação Inicial</span>
+                        <span id="subtotal-formacao-vlr" class="text-lg font-black text-slate-800">R$ 0,00</span>
+                    </div>
+                </div>
+
+                <!-- Assessoria Pedagógica, Monitoramento e Avaliação -->
+                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200/60 space-y-4">
+                    <div class="flex items-center justify-between border-b pb-2">
+                        <h4 class="font-bold text-slate-800 text-sm">4. Assessoria e Monitoramento Mensal</h4>
+                        <span class="text-xs text-slate-400">Assessoria contínua p/ escola</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Valor por Escola / Mês</label>
+                            <div class="flex items-center">
+                                <span class="text-slate-400 mr-1 font-bold">R$</span>
+                                <input type="number" id="input-assessoria-escola" value="800.00" class="input-param">
+                            </div>
+                        </div>
+                        <div class="text-center flex flex-col justify-center bg-white rounded-xl border p-2">
+                            <span class="text-[9px] font-bold text-slate-400 block uppercase">Escolas Contempladas</span>
+                            <span class="text-sm font-bold text-slate-700">47 Escolas</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 flex justify-between items-center shadow-sm">
+                        <span class="text-xs font-bold text-slate-500 uppercase font-bold">Subtotal Assessoria (12 Meses)</span>
+                        <span id="subtotal-assessoria-vlr" class="text-lg font-black text-slate-800">R$ 0,00</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- BLOCO 5: CONSOLIDAÇÃO DA PROPOSTA -->
+        <section class="card-base bg-slate-900 text-white border-none shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-64 h-64 bg-cyan-500 opacity-5 rounded-full blur-3xl -mr-32 -mt-32"></div>
+            
+            <h3 class="text-xl font-bold mb-8 flex items-center gap-3 relative z-10">
+                <div class="bg-cyan-400 w-1.5 h-6 rounded-full"></div>
+                Bloco 5: Consolidação Financeira Geral
+            </h3>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-8 relative z-10">
+                <!-- Simulador de Parcelamento -->
+                <div class="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10 shadow-lg">
+                    <div class="flex justify-between items-center mb-4">
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-widest text-left">Condição de Pagamento</label>
+                        <span id="label-acrescimo" class="hidden text-[10px] font-black bg-red-500 text-white px-2 py-0.5 rounded-full animate-pulse uppercase tracking-tighter">+3% Acréscimo Financeiro</span>
+                    </div>
+                    
+                    <div class="flex flex-col md:flex-row items-center gap-4">
+                        <select id="select-parcelas" class="w-full p-4 bg-slate-800 border border-slate-600 rounded-xl font-black text-white text-xl outline-none focus:ring-2 focus:ring-cyan-500 transition-all cursor-pointer">
+                            <!-- Preenchido via JS de 1x a 12x -->
+                        </select>
+                        <div class="text-right flex-shrink-0 w-full md:w-auto mt-4 md:mt-0">
+                            <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">Valor do Pagamento</span>
+                            <span id="valor-cada-parcela" class="text-3xl font-black text-cyan-400">R$ 0,00</span>
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-4 italic text-left">*Regra: Até 8 parcelas mensais sem juros ou acréscimo. A partir de 9 parcelas, aplica-se acréscimo de 3% sobre o valor global.</p>
+                </div>
+
+                <!-- Resumo Geral em Linha -->
+                <div class="flex flex-col justify-center gap-3 px-2">
+                    <div class="flex justify-between items-center text-sm border-b border-white/5 pb-1">
+                        <span class="text-slate-400">1. Material Tecnológico (Maletas/Kits):</span>
+                        <span id="consol-kits-vlr" class="font-bold text-white">R$ 0,00</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm border-b border-white/5 pb-2">
+                        <span class="text-slate-400">2. Material Didático (Contraturno):</span>
+                        <span id="consol-material-vlr" class="font-bold text-white">R$ 0,00</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm border-b border-white/5 pb-2">
+                        <span class="text-slate-400">3. Formação inicial (Docentes):</span>
+                        <span id="consol-lanche-vlr" class="font-bold text-white">R$ 0,00</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm border-b border-white/5 pb-2">
+                        <span class="text-slate-400">4. Custos com Docência (Professores):</span>
+                        <span id="consol-profs-vlr" class="font-bold text-white">R$ 0,00</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm border-b border-white/5 pb-2">
+                        <span class="text-slate-400">5. Equipe Técnica e Apoio:</span>
+                        <span id="consol-equipe-vlr" class="font-bold text-white">R$ 0,00</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm border-b border-white/5 pb-2 text-cyan-400 font-bold">
+                        <span class="text-slate-400">Ajuste / Encargo Financeiro:</span>
+                        <span id="valor-ajuste-financeiro" class="font-bold">R$ 0,00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Geral Proposta -->
+            <div class="bg-gradient-to-r from-cyan-600 to-indigo-600 p-8 md:p-10 rounded-3xl text-center shadow-inner relative z-10 flex flex-col items-center justify-center">
+                <span class="block text-sm font-bold opacity-90 uppercase tracking-[0.3em] mb-2 text-white w-full">Investimento Global da Proposta (12 Meses)</span>
+                <span id="total-geral-proposta" class="block text-4xl md:text-6xl font-black tracking-tight drop-shadow-xl w-full text-center">R$ 0,00</span>
+            </div>
+        </section>
+
+        <!-- Botão PDF -->
+        <div class="text-center pb-20 flex justify-center">
+            <button id="btn-gerar-pdf-completo" class="bg-slate-800 hover:bg-slate-900 text-white py-4 px-12 rounded-2xl shadow-xl font-bold flex items-center transition-all transform hover:-translate-y-1 active:scale-95">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                Gerar Relatório de Proposta Comercial (PDF)
+            </button>
+        </div>
+
+    </div>
+
+<script>
+    // --- STREAMING_CHUNK: Definindo Objetos de Dados do Público Alvo... ---
+    // Estrutura de dados das escolas e turmas (47 Escolas total, conforme edital da imagem_c442fc.png e sua errata)
+    const totaisPlanilha = {
+    "escolas": 47,
+    "turmas": 410,
+    "capacidade": 10795,
+    "matricula": 10378,
+    "vagas": 417,
+    "maletas13": 230,
+    "maletas45": 225,
+    "maletas69": 6,
+    "maletas": 461,
+    "custoMaleta13": 5500,
+    "custoMaleta45": 6800,
+    "custoMaleta69": 8500,
+    "investimentoMaletas": 2846000,
+    "fonte": "Mapa de Turmas2.xlsx | Abas DETALHAMENTO e DADOSMACROS"
+};
+
+    const dadosSME = [
+    {
+        "id": 1,
+        "segmento": "Anos Iniciais",
+        "ano": "1º ano",
+        "turmas": 79,
+        "matricula": 1850,
+        "capacidade": 1915,
+        "disponivel": 65,
+        "faixaKit": "maleta13",
+        "faixaLabel": "1º ao 3º ano",
+        "alunosPorTurma": 23.42,
+        "maletas": 71,
+        "maletasPorAluno": 0.03837838
+    },
+    {
+        "id": 2,
+        "segmento": "Anos Iniciais",
+        "ano": "2º ano",
+        "turmas": 86,
+        "matricula": 2123,
+        "capacidade": 2118,
+        "disponivel": -5,
+        "faixaKit": "maleta13",
+        "faixaLabel": "1º ao 3º ano",
+        "alunosPorTurma": 24.69,
+        "maletas": 82,
+        "maletasPorAluno": 0.03862459
+    },
+    {
+        "id": 3,
+        "segmento": "Anos Iniciais",
+        "ano": "3º ano",
+        "turmas": 85,
+        "matricula": 2015,
+        "capacidade": 2059,
+        "disponivel": 44,
+        "faixaKit": "maleta13",
+        "faixaLabel": "1º ao 3º ano",
+        "alunosPorTurma": 23.71,
+        "maletas": 77,
+        "maletasPorAluno": 0.0382134
+    },
+    {
+        "id": 4,
+        "segmento": "Anos Iniciais",
+        "ano": "4º ano",
+        "turmas": 79,
+        "matricula": 2169,
+        "capacidade": 2311,
+        "disponivel": 142,
+        "faixaKit": "maleta45",
+        "faixaLabel": "4º e 5º anos",
+        "alunosPorTurma": 27.46,
+        "maletas": 115,
+        "maletasPorAluno": 0.05301982
+    },
+    {
+        "id": 5,
+        "segmento": "Anos Iniciais",
+        "ano": "5º ano",
+        "turmas": 75,
+        "matricula": 2061,
+        "capacidade": 2189,
+        "disponivel": 128,
+        "faixaKit": "maleta45",
+        "faixaLabel": "4º e 5º anos",
+        "alunosPorTurma": 27.48,
+        "maletas": 110,
+        "maletasPorAluno": 0.05337215
+    },
+    {
+        "id": 6,
+        "segmento": "Anos Finais",
+        "ano": "6º ano",
+        "turmas": 2,
+        "matricula": 56,
+        "capacidade": 70,
+        "disponivel": 14,
+        "faixaKit": "maleta69",
+        "faixaLabel": "6º ao 9º ano",
+        "alunosPorTurma": 28.0,
+        "maletas": 2,
+        "maletasPorAluno": 0.03571429
+    },
+    {
+        "id": 7,
+        "segmento": "Anos Finais",
+        "ano": "7º ano",
+        "turmas": 2,
+        "matricula": 42,
+        "capacidade": 70,
+        "disponivel": 28,
+        "faixaKit": "maleta69",
+        "faixaLabel": "6º ao 9º ano",
+        "alunosPorTurma": 21.0,
+        "maletas": 2,
+        "maletasPorAluno": 0.04761905
+    },
+    {
+        "id": 8,
+        "segmento": "Anos Finais",
+        "ano": "8º ano",
+        "turmas": 1,
+        "matricula": 31,
+        "capacidade": 35,
+        "disponivel": 4,
+        "faixaKit": "maleta69",
+        "faixaLabel": "6º ao 9º ano",
+        "alunosPorTurma": 31.0,
+        "maletas": 1,
+        "maletasPorAluno": 0.03225806
+    },
+    {
+        "id": 9,
+        "segmento": "Anos Finais",
+        "ano": "9º ano",
+        "turmas": 1,
+        "matricula": 31,
+        "capacidade": 35,
+        "disponivel": 4,
+        "faixaKit": "maleta69",
+        "faixaLabel": "6º ao 9º ano",
+        "alunosPorTurma": 31.0,
+        "maletas": 1,
+        "maletasPorAluno": 0.03225806
+    }
+];
+
+    const dadosEscolas = [
+    {
+        "id": 1,
+        "escola": "EM PROFESSORA SILENE DE ANDRADE",
+        "turmas": 6,
+        "capacidade": 210,
+        "matricula": 160,
+        "vagas": 50,
+        "ocupacao": 76.2,
+        "maletas13": 0,
+        "maletas45": 0,
+        "maletas69": 6,
+        "maletas": 6
+    },
+    {
+        "id": 2,
+        "escola": "EM GRANDE RETIRO",
+        "turmas": 10,
+        "capacidade": 265,
+        "matricula": 242,
+        "vagas": 23,
+        "ocupacao": 91.3,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 3,
+        "escola": "EM PROFª MARIA CAMARGO",
+        "turmas": 9,
+        "capacidade": 240,
+        "matricula": 241,
+        "vagas": -1,
+        "ocupacao": 100.4,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 4,
+        "escola": "EM REGINA HELOU",
+        "turmas": 10,
+        "capacidade": 270,
+        "matricula": 285,
+        "vagas": -15,
+        "ocupacao": 105.6,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 5,
+        "escola": "EM PROFESSOR LOURENÇO FERREIRA CAMPOS",
+        "turmas": 11,
+        "capacidade": 305,
+        "matricula": 300,
+        "vagas": 5,
+        "ocupacao": 98.4,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 6,
+        "escola": "EM PAULO TEIXEIRA DE MENDONCA",
+        "turmas": 6,
+        "capacidade": 156,
+        "matricula": 164,
+        "vagas": -8,
+        "ocupacao": 105.1,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 7,
+        "escola": "EM OSTERNO POTENCIANO E SILVA",
+        "turmas": 8,
+        "capacidade": 210,
+        "matricula": 222,
+        "vagas": -12,
+        "ocupacao": 105.7,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 8,
+        "escola": "EM PROFESSORA MARIA NOSIDIA PALMEIRAS DAS NEVES",
+        "turmas": 10,
+        "capacidade": 270,
+        "matricula": 288,
+        "vagas": -18,
+        "ocupacao": 106.7,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 9,
+        "escola": "EM PROFESSORA AMÉLIA FERNANDES MARTINS",
+        "turmas": 10,
+        "capacidade": 270,
+        "matricula": 245,
+        "vagas": 25,
+        "ocupacao": 90.7,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 10,
+        "escola": "ESCOLA MUNICIPAL GO-04",
+        "turmas": 5,
+        "capacidade": 90,
+        "matricula": 96,
+        "vagas": -6,
+        "ocupacao": 106.7,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 11,
+        "escola": "EM MÔNICA DE CASTRO CARNEIRO",
+        "turmas": 10,
+        "capacidade": 270,
+        "matricula": 277,
+        "vagas": -7,
+        "ocupacao": 102.6,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 12,
+        "escola": "EM MOISÉS SANTANA",
+        "turmas": 6,
+        "capacidade": 160,
+        "matricula": 173,
+        "vagas": -13,
+        "ocupacao": 108.1,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 13,
+        "escola": "ESCOLA JOÃO CRISOSTOMO ROSA",
+        "turmas": 5,
+        "capacidade": 135,
+        "matricula": 129,
+        "vagas": 6,
+        "ocupacao": 95.6,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 14,
+        "escola": "EM SANTA RITA DE CÁSSIA (VALE DAS POMBAS)",
+        "turmas": 5,
+        "capacidade": 73,
+        "matricula": 77,
+        "vagas": -4,
+        "ocupacao": 105.5,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 15,
+        "escola": "EM SANTA TEREZINHA",
+        "turmas": 5,
+        "capacidade": 126,
+        "matricula": 99,
+        "vagas": 27,
+        "ocupacao": 78.6,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 16,
+        "escola": "EM SANTO ANTÔNIO",
+        "turmas": 10,
+        "capacidade": 270,
+        "matricula": 252,
+        "vagas": 18,
+        "ocupacao": 93.3,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 17,
+        "escola": "EM SEBASTIÃO ARANTES",
+        "turmas": 10,
+        "capacidade": 270,
+        "matricula": 232,
+        "vagas": 38,
+        "ocupacao": 85.9,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 18,
+        "escola": "EMTI SANTA MARTA",
+        "turmas": 9,
+        "capacidade": 245,
+        "matricula": 173,
+        "vagas": 72,
+        "ocupacao": 70.6,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 19,
+        "escola": "EM STEPHÂNIA ALVES BISPO",
+        "turmas": 10,
+        "capacidade": 275,
+        "matricula": 284,
+        "vagas": -9,
+        "ocupacao": 103.3,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 20,
+        "escola": "EM TARGINO DE AGUIAR",
+        "turmas": 7,
+        "capacidade": 185,
+        "matricula": 191,
+        "vagas": -6,
+        "ocupacao": 103.2,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 21,
+        "escola": "EM VILA ROSA",
+        "turmas": 8,
+        "capacidade": 210,
+        "matricula": 226,
+        "vagas": -16,
+        "ocupacao": 107.6,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 22,
+        "escola": "EMTI ROTARY CLUB DE GOIANIA",
+        "turmas": 8,
+        "capacidade": 162,
+        "matricula": 170,
+        "vagas": -8,
+        "ocupacao": 104.9,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 23,
+        "escola": "EM ZEVERA ANDREA VECCI",
+        "turmas": 13,
+        "capacidade": 350,
+        "matricula": 328,
+        "vagas": 22,
+        "ocupacao": 93.7,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 24,
+        "escola": "EMTI PROFESSORA MARLEI GARCIA",
+        "turmas": 12,
+        "capacidade": 309,
+        "matricula": 325,
+        "vagas": -16,
+        "ocupacao": 105.2,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 25,
+        "escola": "EM FRANCISCO BIBIANO DE CARVALHO",
+        "turmas": 8,
+        "capacidade": 210,
+        "matricula": 219,
+        "vagas": -9,
+        "ocupacao": 104.3,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 26,
+        "escola": "EM ABRAO RASSI",
+        "turmas": 12,
+        "capacidade": 320,
+        "matricula": 321,
+        "vagas": -1,
+        "ocupacao": 100.3,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 27,
+        "escola": "EM ALONSO DIAS PINHEIRO",
+        "turmas": 7,
+        "capacidade": 185,
+        "matricula": 191,
+        "vagas": -6,
+        "ocupacao": 103.2,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 28,
+        "escola": "EM ANA DAS NEVES DE FREITAS",
+        "turmas": 8,
+        "capacidade": 215,
+        "matricula": 174,
+        "vagas": 41,
+        "ocupacao": 80.9,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 29,
+        "escola": "EM BENEDITO SOARES DE CASTRO",
+        "turmas": 7,
+        "capacidade": 190,
+        "matricula": 159,
+        "vagas": 31,
+        "ocupacao": 83.7,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 30,
+        "escola": "EM DE TEMPO INTEGRAL EUNICE WEAVER",
+        "turmas": 8,
+        "capacidade": 210,
+        "matricula": 214,
+        "vagas": -4,
+        "ocupacao": 101.9,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 31,
+        "escola": "EM DE TEMPO INTEGRAL JARDIM DAS AROEIRAS",
+        "turmas": 8,
+        "capacidade": 220,
+        "matricula": 206,
+        "vagas": 14,
+        "ocupacao": 93.6,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 32,
+        "escola": "EM DE TEMPO INTEGRAL JARDIM NOVO MUNDO",
+        "turmas": 8,
+        "capacidade": 167,
+        "matricula": 158,
+        "vagas": 9,
+        "ocupacao": 94.6,
+        "maletas13": 5,
+        "maletas45": 0,
+        "maletas69": 0,
+        "maletas": 5
+    },
+    {
+        "id": 33,
+        "escola": "EM DE TEMPO INTEGRAL JUSCELINO KUBITSCHEK",
+        "turmas": 7,
+        "capacidade": 171,
+        "matricula": 175,
+        "vagas": -4,
+        "ocupacao": 102.3,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 34,
+        "escola": "EM DE TEMPO INTEGRAL PRESIDENTE DUTRA",
+        "turmas": 8,
+        "capacidade": 212,
+        "matricula": 222,
+        "vagas": -10,
+        "ocupacao": 104.7,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 35,
+        "escola": "EM DE TEMPO INTEGRAL RUI RODRIGUES",
+        "turmas": 6,
+        "capacidade": 150,
+        "matricula": 131,
+        "vagas": 19,
+        "ocupacao": 87.3,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 36,
+        "escola": "EM DE TEMPO INTEGRAL SETOR GRAJAU",
+        "turmas": 12,
+        "capacidade": 325,
+        "matricula": 346,
+        "vagas": -21,
+        "ocupacao": 106.5,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 37,
+        "escola": "EM DONA BELINHA",
+        "turmas": 8,
+        "capacidade": 215,
+        "matricula": 223,
+        "vagas": -8,
+        "ocupacao": 103.7,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 38,
+        "escola": "EM MARIA GENOVEVA",
+        "turmas": 5,
+        "capacidade": 135,
+        "matricula": 125,
+        "vagas": 10,
+        "ocupacao": 92.6,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 39,
+        "escola": "EM FREI DEMETRIO ZANQUETA",
+        "turmas": 10,
+        "capacidade": 270,
+        "matricula": 275,
+        "vagas": -5,
+        "ocupacao": 101.9,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 40,
+        "escola": "EM FREI NAZARENO CONFALONI",
+        "turmas": 12,
+        "capacidade": 330,
+        "matricula": 339,
+        "vagas": -9,
+        "ocupacao": 102.7,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 41,
+        "escola": "EM GEORGETA RIVALINO DUARTE",
+        "turmas": 7,
+        "capacidade": 190,
+        "matricula": 195,
+        "vagas": -5,
+        "ocupacao": 102.6,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 42,
+        "escola": "EM MARIA ARAÚJO DE FREITAS",
+        "turmas": 15,
+        "capacidade": 405,
+        "matricula": 273,
+        "vagas": 132,
+        "ocupacao": 67.4,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 43,
+        "escola": "EM JARBAS JAYME",
+        "turmas": 7,
+        "capacidade": 190,
+        "matricula": 190,
+        "vagas": 0,
+        "ocupacao": 100.0,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 44,
+        "escola": "EM JOSÉ CARLOS PIMENTA",
+        "turmas": 5,
+        "capacidade": 114,
+        "matricula": 103,
+        "vagas": 11,
+        "ocupacao": 90.4,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 45,
+        "escola": "EM LIONS CLUBE DE GOIÂNIA TOCANTINS",
+        "turmas": 13,
+        "capacidade": 360,
+        "matricula": 331,
+        "vagas": 29,
+        "ocupacao": 91.9,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 46,
+        "escola": "EM JOAQUIM CÂMARA FILHO",
+        "turmas": 12,
+        "capacidade": 325,
+        "matricula": 326,
+        "vagas": -1,
+        "ocupacao": 100.3,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    },
+    {
+        "id": 47,
+        "escola": "EM MARECHAL RIBAS JÚNIOR",
+        "turmas": 14,
+        "capacidade": 360,
+        "matricula": 303,
+        "vagas": 57,
+        "ocupacao": 84.2,
+        "maletas13": 5,
+        "maletas45": 5,
+        "maletas69": 0,
+        "maletas": 10
+    }
+];
+
+    const fmtBRL = (v) => v.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+
+    function setupMatriz() {
+        const tbody = document.getElementById('tabela-estudantes');
+        if(!tbody) return;
+        tbody.innerHTML = '';
+        dadosSME.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="py-3 px-4 text-xs font-semibold text-slate-500">
+                    ${item.segmento}
+                    <span class="block text-[9px] text-slate-400 font-bold uppercase">${item.faixaLabel}</span>
+                </td>
+                <td class="py-3 px-4 font-bold text-slate-800">${item.ano}</td>
+                <td class="py-3 px-4 text-center">
+                    <input type="number" class="input-inline-table input-turmas" data-id="${item.id}" value="${item.turmas}">
+                </td>
+                <td class="py-3 px-4 text-center">
+                    <input type="number" step="0.01" class="input-inline-table input-alunos" data-id="${item.id}" value="${item.alunosPorTurma}">
+                </td>
+                <td class="py-3 px-4 text-right font-bold text-slate-700 col-total-alunos" data-id="${item.id}">0</td>
+                <td class="py-3 px-4 text-right font-black text-cyan-700 col-total-kits" data-id="${item.id}">0</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function normalizarTexto(texto) {
+        return String(texto || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    }
+
+    function setupEscolas(filtro = '') {
+        const tbody = document.getElementById('tabela-escolas');
+        if(!tbody) return;
+        const termo = normalizarTexto(filtro);
+        const escolasFiltradas = dadosEscolas.filter(item => normalizarTexto(item.escola).includes(termo));
+        setText('contador-escolas', `${escolasFiltradas.length} de ${dadosEscolas.length}`);
+        tbody.innerHTML = escolasFiltradas.map(item => `
+            <tr>
+                <td class="py-3 px-4 font-bold text-slate-800">${String(item.id).padStart(2, '0')}. ${item.escola}</td>
+                <td class="py-3 px-4 text-center">${item.turmas.toLocaleString('pt-BR')}</td>
+                <td class="py-3 px-4 text-right">${item.matricula.toLocaleString('pt-BR')}</td>
+                <td class="py-3 px-4 text-right">${item.capacidade.toLocaleString('pt-BR')}</td>
+                <td class="py-3 px-4 text-right font-bold ${item.ocupacao > 100 ? 'text-red-600' : 'text-slate-700'}">${item.ocupacao.toLocaleString('pt-BR')}%</td>
+                <td class="py-3 px-4 text-right font-black text-cyan-700">${item.maletas.toLocaleString('pt-BR')}</td>
+            </tr>
+        `).join('');
+    }
+
+    function initParcelas() {
+        const select = document.getElementById('select-parcelas');
+        if (!select) return;
+        for (let i = 1; i <= 12; i++) {
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.innerText = i === 1 ? 'À Vista (1x)' : `${i} Parcelas Mensais`;
+            if (i === 12) opt.selected = true;
+            select.appendChild(opt);
+        }
+    }
+
+    // --- STREAMING_CHUNK: Codificando Motor de Cálculo Dinâmico... ---
+    function calcular() {
+        let totalTurmas = 0;
+        let totalAlunos = 0;
+        let totalKits = 0;
+        const kitResumo = { maleta13: 0, maleta45: 0, maleta69: 0 };
+
+        document.querySelectorAll('.input-turmas').forEach(input => {
+            const id = parseInt(input.dataset.id);
+            const valTurmas = parseInt(input.value) || 0;
+            const item = dadosSME.find(d => d.id === id);
+            item.turmas = valTurmas;
+        });
+
+        document.querySelectorAll('.input-alunos').forEach(input => {
+            const id = parseInt(input.dataset.id);
+            const valAlunos = parseFloat(input.value) || 0;
+            const item = dadosSME.find(d => d.id === id);
+            item.alunosPorTurma = valAlunos;
+        });
+
+        dadosSME.forEach(item => {
+            const totalAlunosLinha = Math.max(0, Math.round(item.turmas * item.alunosPorTurma));
+            const totalKitsLinha = Math.max(0, Math.round(totalAlunosLinha * item.maletasPorAluno));
+
+            item.matriculaAtual = totalAlunosLinha;
+            item.maletasAtual = totalKitsLinha;
+            kitResumo[item.faixaKit] += totalKitsLinha;
+            totalTurmas += item.turmas;
+            totalAlunos += totalAlunosLinha;
+            totalKits += totalKitsLinha;
+
+            const colAlunos = document.querySelector(`.col-total-alunos[data-id="${item.id}"]`);
+            const colKits = document.querySelector(`.col-total-kits[data-id="${item.id}"]`);
+            if(colAlunos) colAlunos.innerText = totalAlunosLinha.toLocaleString('pt-BR');
+            if(colKits) colKits.innerText = totalKitsLinha.toLocaleString('pt-BR');
+        });
+
+        const totalCapacidade = totaisPlanilha.capacidade;
+        setText('total-escolas', totaisPlanilha.escolas.toLocaleString('pt-BR'));
+        setText('total-turmas', totalTurmas.toLocaleString('pt-BR'));
+        setText('total-alunos', totalAlunos.toLocaleString('pt-BR'));
+        setText('total-capacidade', totalCapacidade.toLocaleString('pt-BR'));
+        setText('total-vagas', (totalCapacidade - totalAlunos).toLocaleString('pt-BR'));
+        setText('total-kits', totalKits.toLocaleString('pt-BR'));
+        setText('txt-total-maleta-13', kitResumo.maleta13.toLocaleString('pt-BR'));
+        setText('txt-total-maleta-45', kitResumo.maleta45.toLocaleString('pt-BR'));
+        setText('txt-total-maleta-69', kitResumo.maleta69.toLocaleString('pt-BR'));
+        document.querySelectorAll('.display-qtd-kits').forEach(el => el.innerText = totalKits.toLocaleString('pt-BR'));
+
+        const modalidadeKits = document.querySelector('input[name="modalidade-kits"]:checked').value;
+        const vlrKit13 = parseFloat(document.getElementById('input-kit-13').value) || 0;
+        const vlrKit45 = parseFloat(document.getElementById('input-kit-45').value) || 0;
+        const vlrKit69 = parseFloat(document.getElementById('input-kit-69').value) || 0;
+        const vlrKitLocacao = parseFloat(document.getElementById('input-kit-locacao').value) || 0;
+        const subtotalAquisicao = (kitResumo.maleta13 * vlrKit13) + (kitResumo.maleta45 * vlrKit45) + (kitResumo.maleta69 * vlrKit69);
+        const subtotalLocacao = totalKits * vlrKitLocacao;
+        const subtotalKits = modalidadeKits === 'aquisicao' ? subtotalAquisicao : subtotalLocacao;
+        setText('subtotal-kits-vlr', fmtBRL(subtotalKits));
+        setText('consol-kits-vlr', fmtBRL(subtotalKits));
+
+        const vlrLivroUnitario = parseFloat(document.getElementById('input-livro-unitario').value) || 0;
+        const subtotalLivros = totalAlunos * vlrLivroUnitario;
+        setText('subtotal-livros-vlr', fmtBRL(subtotalLivros));
+        setText('consol-material-vlr', fmtBRL(subtotalLivros));
+
+        const jornadaDocente = parseInt(document.getElementById('select-jornada-docente').value) || 40;
+        const horaAtividadePct = parseFloat(document.getElementById('select-hora-atividade').value) || 0;
+        const salarioDocente = parseFloat(document.getElementById('input-salario-docente').value) || 0;
+        const encargosPct = parseFloat(document.getElementById('input-encargos-docente').value) || 0;
+
+        const horasRegenciaProf = jornadaDocente * (1 - (horaAtividadePct / 100));
+        setText('txt-regencia-por-prof', `${horasRegenciaProf.toFixed(1)} horas / semana`);
+
+        const totalHorasDemandaSemanal = totalTurmas * 2;
+        setText('txt-total-horas-demanda', totalHorasDemandaSemanal.toLocaleString('pt-BR'));
+
+        const headcountProfs = horasRegenciaProf > 0 ? Math.ceil(totalHorasDemandaSemanal / horasRegenciaProf) : 0;
+        setText('txt-headcount-professores', `${headcountProfs} Profs`);
+        setText('txt-formacao-profs', `${headcountProfs} Profs`);
+
+        const custoMensalDocente = salarioDocente * (1 + (encargosPct / 100));
+        const subtotalProfessores = headcountProfs * custoMensalDocente * 12;
+        setText('subtotal-professores-vlr', fmtBRL(subtotalProfessores));
+        setText('consol-profs-vlr', fmtBRL(subtotalProfessores));
+
+        const vlrFormacaoProf = parseFloat(document.getElementById('input-formacao-prof').value) || 0;
+        const subtotalFormacao = headcountProfs * vlrFormacaoProf;
+        setText('subtotal-formacao-vlr', fmtBRL(subtotalFormacao));
+        setText('consol-lanche-vlr', fmtBRL(subtotalFormacao));
+
+        const vlrAssessoriaEscola = parseFloat(document.getElementById('input-assessoria-escola').value) || 0;
+        const subtotalAssessoria = totaisPlanilha.escolas * vlrAssessoriaEscola * 12;
+        setText('subtotal-assessoria-vlr', fmtBRL(subtotalAssessoria));
+        setText('consol-equipe-vlr', fmtBRL(subtotalAssessoria));
+
+        const subtotalProposta = subtotalKits + subtotalLivros + subtotalProfessores + subtotalFormacao + subtotalAssessoria;
+        const numParcelas = parseInt(document.getElementById('select-parcelas').value) || 12;
+
+        let percentAjuste = 0;
+        if (numParcelas >= 9) {
+            percentAjuste = 0.03;
+            document.getElementById('label-acrescimo').classList.remove('hidden');
+        } else {
+            document.getElementById('label-acrescimo').classList.add('hidden');
+        }
+
+        const vlrAjusteFinanceiro = subtotalProposta * percentAjuste;
+        const totalPropostaCompleto = subtotalProposta + vlrAjusteFinanceiro;
+        const vlrParcelaEfetiva = totalPropostaCompleto / numParcelas;
+
+        setText('valor-ajuste-financeiro', fmtBRL(vlrAjusteFinanceiro));
+        setText('total-geral-proposta', fmtBRL(totalPropostaCompleto));
+        setText('valor-cada-parcela', fmtBRL(vlrParcelaEfetiva));
+    }
+
+    function setText(id, value) {
+        const el = document.getElementById(id);
+        if (el) el.innerText = value;
+    }
+
+    // --- STREAMING_CHUNK: Desenvolvendo Exportador de Relatório PDF... ---
+    function gerarPDF() {
+        calcular();
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const logoImg = document.getElementById('logo-pdf');
+        const dataGeracao = new Date().toLocaleDateString('pt-BR');
+        const totalPaginas = 4;
+
+        const addHeaderAndFooter = (doc, current, total) => {
+            if (logoImg) {
+                try {
+                    const logoHeight = 14;
+                    const logoWidth = (logoImg.width / logoImg.height) * logoHeight;
+                    doc.addImage(logoImg, 'PNG', 15, 10, logoWidth, logoHeight);
+                } catch (e) {}
+            }
+            doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.setTextColor(80, 80, 80);
+            doc.text("Proposta de Parceria SME Goiânia - Robótica Educacional", 15, 28);
+            doc.setFontSize(8); doc.setTextColor(150);
+            doc.text(`Gerado em: ${dataGeracao} | Página ${current} de ${total}`, 105, 285, {align:'center'});
+            doc.setLineWidth(0.5); doc.setDrawColor(220); doc.line(15, 31, 195, 31);
+        };
+
+        addHeaderAndFooter(doc, 1, totalPaginas);
+        doc.setFontSize(13); doc.setTextColor(0, 107, 137);
+        doc.text("1. Estrutura Operacional e Público-Alvo (47 Escolas SME-GYN)", 15, 42);
+
+        const bodyTabelaEscolas = [];
+        const kitResumo = { maleta13: 0, maleta45: 0, maleta69: 0 };
+        dadosSME.forEach(item => {
+            const totalAlunos = item.matriculaAtual ?? Math.round(item.turmas * item.alunosPorTurma);
+            const kits = item.maletasAtual ?? Math.round(totalAlunos * item.maletasPorAluno);
+            kitResumo[item.faixaKit] += kits;
+            bodyTabelaEscolas.push([item.segmento, item.ano, item.turmas, item.alunosPorTurma, totalAlunos, kits]);
+        });
+        bodyTabelaEscolas.push([
+            {content: 'TOTAIS CONSOLIDADOS', colSpan: 2, styles: {fontStyle: 'bold', fillColor: [240, 240, 240]}},
+            {content: document.getElementById('total-turmas').innerText, styles: {fontStyle: 'bold', fillColor: [240, 240, 240]}},
+            '',
+            {content: document.getElementById('total-alunos').innerText, styles: {fontStyle: 'bold', fillColor: [240, 240, 240]}},
+            {content: document.getElementById('total-kits').innerText, styles: {fontStyle: 'bold', fillColor: [240, 240, 240]}}
+        ]);
+
+        doc.autoTable({
+            startY: 48,
+            head: [['Segmento', 'Ano Letivo', 'Turmas', 'Matrícula/Turma', 'Matrícula', 'Maletas Ref.']],
+            body: bodyTabelaEscolas,
+            theme: 'grid',
+            headStyles: { fillColor: [0, 107, 137] },
+            styles: { fontSize: 8.5 }
+        });
+
+        doc.autoTable({
+            startY: doc.lastAutoTable.finalY + 8,
+            head: [['Faixa', 'Maletas', 'Valor Unitário', 'Subtotal']],
+            body: [
+                ['1º ao 3º ano', kitResumo.maleta13, fmtBRL(parseFloat(document.getElementById('input-kit-13').value) || 0), fmtBRL(kitResumo.maleta13 * (parseFloat(document.getElementById('input-kit-13').value) || 0))],
+                ['4º e 5º anos', kitResumo.maleta45, fmtBRL(parseFloat(document.getElementById('input-kit-45').value) || 0), fmtBRL(kitResumo.maleta45 * (parseFloat(document.getElementById('input-kit-45').value) || 0))],
+                ['6º ao 9º ano', kitResumo.maleta69, fmtBRL(parseFloat(document.getElementById('input-kit-69').value) || 0), fmtBRL(kitResumo.maleta69 * (parseFloat(document.getElementById('input-kit-69').value) || 0))]
+            ],
+            theme: 'grid',
+            headStyles: { fillColor: [71, 85, 105] },
+            styles: { fontSize: 8 }
+        });
+
+        doc.addPage();
+        addHeaderAndFooter(doc, 2, totalPaginas);
+        doc.setFontSize(13); doc.setTextColor(0, 107, 137);
+        doc.text("2. Escolas Vinculadas à SME-GYN", 15, 42);
+        doc.autoTable({
+            startY: 48,
+            head: [['#', 'Escola', 'Turmas', 'Matrícula', 'Capacidade', 'Ocup.', 'Maletas']],
+            body: dadosEscolas.map(item => [item.id, item.escola, item.turmas, item.matricula, item.capacidade, `${item.ocupacao}%`, item.maletas]),
+            theme: 'grid',
+            headStyles: { fillColor: [0, 107, 137] },
+            styles: { fontSize: 5.4, cellPadding: 0.7, overflow: 'ellipsize' },
+            columnStyles: { 1: { cellWidth: 86, overflow: 'ellipsize' } }
+        });
+
+        doc.addPage();
+        addHeaderAndFooter(doc, 3, totalPaginas);
+        doc.setFontSize(13); doc.setTextColor(0, 107, 137);
+        doc.text("3. Materiais, Tecnologia e Corpo Docente", 15, 42);
+
+        const modKits = document.querySelector('input[name="modalidade-kits"]:checked').value === 'aquisicao' ? 'Aquisição Direta' : 'Locação Tecnológica';
+        const bodyItens = [
+            ['Maletas/Kits de Robótica', modKits, document.getElementById('total-kits').innerText, document.getElementById('subtotal-kits-vlr').innerText],
+            ['Livros Didáticos do Estudante', 'Consumível Anual', document.getElementById('total-alunos').innerText, document.getElementById('subtotal-livros-vlr').innerText],
+            ['Corpo de Docentes Especializados', `Jornada: ${document.getElementById('select-jornada-docente').value}h/sem`, document.getElementById('txt-headcount-professores').innerText, document.getElementById('subtotal-professores-vlr').innerText],
+            ['Formação Inicial de Professores', 'Capacitação SESI', document.getElementById('txt-headcount-professores').innerText, document.getElementById('subtotal-formacao-vlr').innerText],
+            ['Assessoria Pedagógica Mensal', 'Serviço de Monitoramento', `${totaisPlanilha.escolas} Escolas`, document.getElementById('subtotal-assessoria-vlr').innerText]
+        ];
+
+        doc.autoTable({
+            startY: 48,
+            head: [['Categoria do Item', 'Modalidade / Referência', 'Quantidade', 'Subtotal (Anual)']],
+            body: bodyItens,
+            theme: 'grid',
+            headStyles: { fillColor: [71, 85, 105] },
+            styles: { fontSize: 8.5 }
+        });
+
+        doc.addPage();
+        addHeaderAndFooter(doc, 4, totalPaginas);
+        doc.setFontSize(13); doc.setTextColor(0, 107, 137);
+        doc.text("4. Cronograma Financeiro de Desembolso", 15, 42);
+
+        const parcelasTot = document.getElementById('select-parcelas').value;
+        const valorParcela = document.getElementById('valor-cada-parcela').innerText;
+        const totalFinal = document.getElementById('total-geral-proposta').innerText;
+
+        const bodyConsol = [
+            ['Investimento Total da Parceria', totalFinal],
+            ['Plano de Parcelamento Escolhido', `${parcelasTot}x Mensais`],
+            ['Valor do Faturamento Mensal', valorParcela],
+            ['Fonte de Dimensionamento', totaisPlanilha.fonte]
+        ];
+
+        doc.autoTable({
+            startY: 48,
+            head: [['Descrição Comercial', 'Valor / Condição']],
+            body: bodyConsol,
+            theme: 'grid',
+            headStyles: { fillColor: [30, 41, 59] },
+            styles: { fontSize: 10 }
+        });
+
+        doc.save(`Proposta_SME_Goiania_Robotica_47Escolas.pdf`);
+    }
+
+    // Inicialização e Eventos
+    window.onload = () => {
+        initParcelas();
+        setupMatriz();
+        setupEscolas();
+        calcular();
+
+        const filtroEscolas = document.getElementById('filtro-escolas');
+        if (filtroEscolas) filtroEscolas.addEventListener('input', () => setupEscolas(filtroEscolas.value));
+
+        // Delegação de Eventos para Inputs Dinâmicos
+        document.addEventListener('input', (e) => {
+            if(e.target.matches('input') || e.target.matches('select')) {
+                calcular();
+            }
+        });
+
+        document.addEventListener('change', (e) => {
+            if(e.target.matches('input[type="radio"]') || e.target.matches('select')) {
+                calcular();
+            }
+        });
+
+        const btnPdf = document.getElementById('btn-gerar-pdf-completo');
+        if(btnPdf) {
+            btnPdf.onclick = () => gerarPDF();
+        }
+    };
+</script>
+</body>
+</html>
